@@ -1,22 +1,7 @@
-* {
-    color: white;
-    background-color: black;
+@import "tailwindcss";
 
-    font-family: monospace;
-
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    
-    /* outline: 1px solid red; */
-}
-
-.screen-div {
-    width: 100vw;
-    height: 100vh;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+  }
 }

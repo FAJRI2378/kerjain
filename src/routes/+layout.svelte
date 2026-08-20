@@ -1,11 +1,8 @@
 <script>
-	import favicon from '$lib/assets/favicon.svg';
-
-	let { children } = $props();
+  import '../app.css';
+  let { children } = $props();
 </script>
 
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
-
-{@render children()}
+<div class="min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
+  {@render children()}
+</div>
