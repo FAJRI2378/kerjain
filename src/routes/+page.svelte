@@ -57,7 +57,7 @@
         </a>
 
         <!-- UMKM Card -->
-        <a href="/hirer/dashboard" class="group relative p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-blue-500/50 hover:bg-slate-900 transition-all duration-300 backdrop-blur-xl">
+        <a href="/hire/dashboard" class="group relative p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-blue-500/50 hover:bg-slate-900 transition-all duration-300 backdrop-blur-xl">
           <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold mb-3 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-slate-950 transition duration-300">
             🏢
           </div>
