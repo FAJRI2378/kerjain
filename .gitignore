@@ -1,23 +1,84 @@
-node_modules
+# ------------------------------------------------------------------
+# KERJAIN — Root .gitignore
+# Melindungi kredensial & mencegah push file yang tidak diinginkan.
+# Setiap sub-project (backend/, frontend/) juga memiliki .gitignore
+# sendiri; file ini adalah lapisan perlindungan tambahan di root.
+# ------------------------------------------------------------------
 
-# Output
-.output
-.vercel
-.netlify
-.wrangler
-/.svelte-kit
-/build
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Env
+# ====================== Environment & Secrets ======================
 .env
 .env.*
 !.env.example
 !.env.test
+.env.backup
+.env.production
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Vite
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
+# File credential
+*.pem
+*.key
+id_rsa
+id_ed25519
+*.jks
+service_account.json
+credentials.json
+secrets.yml
+vendor/auth.json
+
+# ===================== Node / Frontend ==============================
+node_modules/
+frontend/node_modules/
+frontend/bun.lock
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===================== PHP / Composer / Backend =====================
+/vendor/
+vendor/
+frontend/vendor/
+composer.phar
+.phpunit.result.cache
+.phpunit.cache/
+.phpunit_cache/
+.phpactor.json
+/phpunit.xml.bak
+
+# Database (SQLLite sudah berisi data lokal)
+*.sqlite
+*.sqlite3
+*.db
+.database/
+*.log
+
+# ===================== Build Output =================================
+/build
+/dist
+/.svelte-kit/
+/.output
+/.vercel/
+/.netlify
+/.wrangler
+/public/build
+/public/hot
+/storage/*.key
+/storage/pail/
+
+# ===================== IDE & Editor ================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.zed/
+.codex/
+.nova/
+.cursor/
+
+# ===================== OS ==========================================
+.DS_Store
+Thumbs.db
+Desktop.ini
