@@ -10,5 +10,9 @@
       "src": "/(.*)",
       "dest": "/api/index.php"
     }
-  ]
+  ],
+  "env": {
+    "APP_STORAGE": "/tmp",
+    "VIEW_COMPILED_PATH": "/tmp"
+  }
 }
