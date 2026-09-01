@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AnalyticsController extends Controller
 {
@@ -39,9 +40,13 @@ class AnalyticsController extends Controller
             ->groupBy('category.name')
             ->mapWithKeys(fn ($tasks, $name) => [$name => $tasks->count()]);
 
+        $monthExpression = DB::connection()->getDriverName() === 'sqlite'
+            ? "strftime('%m', updated_at)"
+            : "DATE_FORMAT(updated_at, '%m')";
+
         $monthlyTrend = Task::where('status', 'completed')
             ->where('updated_at', '>=', now()->subMonths(6))
-            ->selectRaw("strftime('%m', updated_at) as month, SUM(budget) as total")
+            ->selectRaw("{$monthExpression} as month, SUM(budget) as total")
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('total', 'month');
