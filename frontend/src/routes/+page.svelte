@@ -61,7 +61,7 @@
           <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold mb-3 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-slate-950 transition duration-300">
             🏢
           </div>
-          <h3 class="font-bold text-base text-white group-hover:text-blue-400 transition">UMKM / Hirer</h3>
+          <h3 class="font-bold text-base text-white group-hover:text-blue-400 transition">UMKM / Hire</h3>
           <p class="text-xs text-slate-400 mt-1 leading-relaxed">Buka lowongan tugas singkat & cari bantuan fleksibel.</p>
         </a>
 
