@@ -1,873 +1,740 @@
 <script>
-  // Siap dihubungkan ke state/route SvelteKit
+  let searchQuery = "";
+  let activeTab = "Semua";
 
-  const categories = [
-    { title: "Layanan AI", icon: "🤖", accent: "#34d399", count: "120", tag: "Baru" },
-    { title: "Pengembangan & IT", icon: "💻", accent: "#60a5fa", count: "450", tag: null },
-    { title: "Desain & Kreatif", icon: "🎨", accent: "#c084fc", count: "310", tag: null },
-    { title: "Penjualan & Pemasaran", icon: "📈", accent: "#fbbf24", count: "280", tag: null },
-    { title: "Penulisan & Penerjemahan", icon: "✍️", accent: "#fb7185", count: "190", tag: null },
-    { title: "Admin & Dukungan", icon: "🎧", accent: "#2dd4bf", count: "210", tag: null },
-    { title: "Keuangan & Akuntansi", icon: "📊", accent: "#818cf8", count: "95", tag: null },
-    { title: "Legal & Hukum", icon: "⚖️", accent: "#22d3ee", count: "60", tag: null }
-  ];
+  const categories = ["Semua", "Konten & Media", "Desain", "Administrasi", "Operasional"];
 
-  const stats = [
-    { value: "12rb+", label: "Tugas selesai bulan ini" },
-    { value: "94%", label: "Tingkat kecocokan tugas" },
-    { value: "< 2 jam", label: "Rata-rata waktu respons" }
-  ];
-
-  const roles = [
+  const tasks = [
     {
-      href: "/login",
-      icon: "🛠️",
-      accent: "#34d399",
-      label: "Untuk pencari kerja",
-      title: "Freelancer",
-      desc: "Cari tugas mikro di sekitar tempat tinggalmu dan hasilkan pendapatan harian secara fleksibel.",
-      cta: "Mulai cari tugas"
+      id: 1,
+      category: "Konten & Media",
+      status: "Buka",
+      title: "Foto Produk 20 Menu + Upload ke Gofood",
+      employer: "Soto Ayam Pak Budi",
+      location: "1.4 km · Tebet, Jakarta Selatan",
+      description: "Dibutuhkan anak muda atau mahasiswa yang paham mengambil foto makanan aesthetic menggunakan HP.",
+      tags: ["#Foto", "#Content Creator", "#Entry Data"],
+      reward: "Rp 75.000",
+      duration: "3 Jam"
     },
     {
-      href: "/login",
-      icon: "🏢",
-      accent: "#60a5fa",
-      label: "Untuk pemilik usaha",
-      title: "UMKM / Employer",
-      desc: "Buka lowongan tugas singkat & temukan bantuan pekerja lokal berbakat dengan proses mudah.",
-      cta: "Pasang pekerjaan"
+      id: 2,
+      category: "Desain",
+      status: "Buka",
+      title: "Desain Poster Promo Grand Opening (A3)",
+      employer: "Kopi Kenangan Lokal",
+      location: "0.8 km · Pancasila, Depok",
+      description: "Buat poster promo beli 1 gratis 1 yang menarik untuk dipasang di depan kedai kopi.",
+      tags: ["#Canva", "#Desain Grafis"],
+      reward: "Rp 50.000",
+      duration: "2 Jam"
     },
+    {
+      id: 3,
+      category: "Administrasi",
+      status: "Buka",
+      title: "Bantu Input Stok Barang ke Excel/Aplikasi",
+      employer: "Toko Berkah Kelontong",
+      location: "2.1 km · Margonda, Depok",
+      description: "Rapikan stok sembako yang baru datang dan catat ke dalam file Excel toko.",
+      tags: ["#Excel", "#Input Data", "#Teliti"],
+      reward: "Rp 100.000",
+      duration: "4 Jam"
+    },
+    {
+      id: 4,
+      category: "Operasional",
+      status: "Buka",
+      title: "Bantu Packing 100 Box Snack Box",
+      employer: "Dapur Mama Snack",
+      location: "3.0 km · Kukusan, Depok",
+      description: "Bantu packing snack box acara seminar untuk esok pagi.",
+      tags: ["#Physical Work", "#Bantu Event"],
+      reward: "Rp 60.000",
+      duration: "2.5 Jam"
+    }
   ];
+
+  let filteredTasks = $derived(
+    activeTab === "Semua"
+      ? tasks
+      : tasks.filter((task) => task.category === activeTab)
+  );
 </script>
 
 <div class="page">
-
-  <div class="noise" aria-hidden="true"></div>
-  <div class="grid-field" aria-hidden="true"></div>
-  <div class="glow glow-a" aria-hidden="true"></div>
-  <div class="glow glow-b" aria-hidden="true"></div>
-
+  <!-- Header Navbar -->
   <header class="site-header">
     <div class="shell header-row">
       <a href="/" class="brand">
-        <span class="brand-mark">K</span>
-        <span class="brand-word">Kerjain<span class="brand-dot">.</span></span>
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="3" ry="3"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">KERJAIN</span>
+          <span class="brand-tagline">Kerja kecil, dampak besar</span>
+        </div>
       </a>
 
       <nav class="site-nav">
-        <a href="#kategori">Kategori</a>
-        <a href="#peran">Pilih peran</a>
+        <a href="/register" class="btn-primary-header">
+          <span class="plus-icon">+</span> Buka Lowongan / Cari Pekerjaan
+        </a>
       </nav>
-
-      <div class="header-actions">
-        <a href="/login" class="btn-ghost">Masuk</a>
-        <a href="/register" class="btn-solid">Daftar sekarang</a>
-      </div>
     </div>
   </header>
 
-  <main class="shell">
-
-    <section class="hero">
-      <div class="hero-copy">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="shell hero-container">
+      <div class="hero-content">
+        
         
         <h1 class="hero-title">
-          Kerja kecil, hasil nyata,
-          <span class="hero-title-accent">tumbuh bersama tetanggamu</span>
+          Temukan kerja yang dekat dengan <span class="highlight-text">keahlianmu.</span>
         </h1>
-
-        <p class="hero-desc">
-          Kerjain menghubungkan UMKM dengan talenta lokal untuk tugas-tugas
-          harian — cepat dikerjakan, cepat dibayar, dan sepenuhnya transparan.
+        
+        <p class="hero-subtitle">
+          Ambil pekerjaan singkat dari UMKM sekitar, dapatkan pengalaman nyata, dan bantu bisnis lokal tumbuh.
         </p>
 
-        <div class="hero-actions">
-          <a href="/register" class="btn-solid btn-lg">Gabung sebagai freelancer</a>
-          <a href="/register" class="btn-outline btn-lg">Saya UMKM, mau pasang tugas</a>
+        <div class="search-box">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b96a5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="text" 
+            placeholder="Cari Foto, Excel, Desain..." 
+            bind:value={searchQuery}
+          />
+          <button class="btn-search">Cari Tugas</button>
         </div>
-
-        <dl class="hero-stats">
-          {#each stats as s}
-            <div class="hero-stat">
-              <dt>{s.value}</dt>
-              <dd>{s.label}</dd>
-            </div>
-          {/each}
-        </dl>
       </div>
 
-      <div class="hero-panel" aria-hidden="true">
-        <div class="panel-window">
-          <div class="panel-topbar">
-            <span></span><span></span><span></span>
-          </div>
-          <div class="panel-body">
-            <div class="task-card">
-              <div class="task-card-head">
-                <span class="task-avatar">RW</span>
-                <div>
-                  <p class="task-name">Warung Bu Rina</p>
-                  <p class="task-meta">Jakarta Selatan · 800m</p>
-                </div>
-                <span class="task-price">Rp75rb</span>
-              </div>
-              <p class="task-title">Foto produk untuk katalog online</p>
-              <div class="task-tags">
-                <span>Fotografi</span>
-                <span>2 jam</span>
-              </div>
-            </div>
-
-            <div class="task-card task-card-dim">
-              <div class="task-card-head">
-                <span class="task-avatar task-avatar-b">DT</span>
-                <div>
-                  <p class="task-name">Distro Tigapuluh</p>
-                  <p class="task-meta">Bandung · Remote</p>
-                </div>
-                <span class="task-price">Rp150rb</span>
-              </div>
-              <p class="task-title">Balas 40 pesan WhatsApp pelanggan</p>
-              <div class="task-tags">
-                <span>Admin</span>
-                <span>Hari ini</span>
-              </div>
+      <div class="hero-stats-panel">
+        <div class="stats-divider"></div>
+        <div class="stats-body">
+          <div class="stat-number">1000<span class="plus">+</span></div>
+          <p class="stat-label">tugas<br />siap dikerjakan</p>
+          <div class="quote-box">
+            <p class="quote-text">“Peluang pertama bisa dimulai dari jarak terdekat.”</p>
+            <div class="quote-footer">
+              <span class="check-icon">✓</span>
+              <span class="check-text">Aman & transparan</span>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section id="peran" class="roles">
-      <div class="section-head">
-        <h2>Masuk sesuai perananmu</h2>
-        <p>Tiga pintu, satu platform — pilih yang sesuai dengan kebutuhanmu.</p>
+  <!-- Content / Task Listings -->
+  <main class="main-content">
+    <div class="shell">
+      <div class="section-label">PELUANG TERBARU</div>
+      
+      <div class="tasks-header">
+        <h2 class="section-title">Tugas di sekitarmu</h2>
+        <span class="task-count">{filteredTasks.length} tugas tersedia</span>
       </div>
 
-      <div class="roles-grid">
-        {#each roles as r}
-          <a
-            href={r.href}
-            class="role-card"
-            style="--accent: {r.accent}"
+      <!-- Category Filter Tabs -->
+      <div class="category-tabs">
+        {#each categories as cat}
+          <button 
+            class="tab-btn {activeTab === cat ? 'active' : ''}" 
+            on:click={() => activeTab = cat}
           >
-            <div class="role-icon">{r.icon}</div>
-            <span class="role-label">{r.label}</span>
-            <h3 class="role-title">{r.title}</h3>
-            <p class="role-desc">{r.desc}</p>
-            <span class="role-cta">{r.cta} <span class="role-arrow">→</span></span>
-          </a>
-        {/each}
-      </div>
-    </section>
-
-    <section id="kategori" class="categories">
-      <div class="section-head section-head-row">
-        <div>
-          <h2>Eksplorasi kategori pekerjaan</h2>
-          <p>Temukan keahlian yang paling sesuai dengan kebutuhan proyekmu.</p>
-        </div>
-        <a href="/categories" class="link-arrow">Lihat semua kategori →</a>
-      </div>
-
-      <div class="categories-grid">
-        {#each categories as item}
-          <button type="button" class="category-card" style="--accent: {item.accent}">
-            {#if item.tag}
-              <span class="category-tag">{item.tag}</span>
-            {/if}
-            <span class="category-icon">{item.icon}</span>
-            <span class="category-title">{item.title}</span>
-            <span class="category-count">{item.count}+ pekerjaan aktif</span>
+            {cat}
           </button>
         {/each}
       </div>
-    </section>
 
-    <section id="tentang" class="cta-band">
-      <div class="cta-band-inner">
-        <div>
-          <h2>Siap kerjain tugas pertamamu?</h2>
-          <p>Daftar gratis dalam 2 menit. Tanpa biaya tersembunyi, tanpa komitmen jangka panjang.</p>
-        </div>
-        <a href="/register" class="btn-solid btn-lg">Daftar sekarang</a>
+      <!-- Task Cards Grid -->
+      <div class="tasks-grid">
+        {#each filteredTasks as task (task.id)}
+          <div class="task-card">
+            <div class="card-header">
+              <span class="badge-cat">{task.category}</span>
+              <span class="status-indicator">
+                <span class="dot"></span> {task.status}
+              </span>
+            </div>
+
+            <h3 class="task-title">{task.title}</h3>
+
+            <div class="card-meta">
+              <span class="meta-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                {task.employer}
+              </span>
+              <span class="meta-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                {task.location}
+              </span>
+            </div>
+
+            <p class="task-desc">{task.description}</p>
+
+            <div class="tags-container">
+              {#each task.tags as tag}
+                <span class="tag-pill">{tag}</span>
+              {/each}
+            </div>
+
+            <div class="card-footer">
+              <div class="reward-info">
+                <span class="reward-label">IMBALAN</span>
+                <div class="reward-value">
+                  {task.reward} 
+                  <span class="duration-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    {task.duration}
+                  </span>
+                </div>
+              </div>
+
+              <button class="btn-action">
+                Ambil Tugas <span class="arrow">→</span>
+              </button>
+            </div>
+          </div>
+        {/each}
       </div>
-    </section>
-
+    </div>
   </main>
 
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="shell footer-row">
-      <p>© 2026 <strong>Kerjain</strong>. Dibuat khusus untuk UMKM &amp; talenta lokal Indonesia.</p>
-      <nav class="footer-nav">
-        <a href="/privacy">Kebijakan privasi</a>
-        <a href="/terms">Syarat &amp; ketentuan</a>
-        <a href="/help">Pusat bantuan</a>
-      </nav>
+      <div>
+        <span class="footer-brand">KERJAIN</span>
+        <p class="footer-sub">Platform kerja mikro untuk Indonesia</p>
+      </div>
+      <p class="copyright">© 2026. Dibuat untuk UMKM dan talenta lokal</p>
     </div>
   </footer>
-
 </div>
 
 <style>
-  :global(html) {
-    color-scheme: dark;
+  :global(body) {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8fafc;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
   }
 
   * {
     box-sizing: border-box;
   }
 
-  .page {
-    position: relative;
-    min-height: 100vh;
-    background: #08090c;
-    color: #e7e9ee;
-    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-    overflow-x: hidden;
-    isolation: isolate;
-  }
-
   .shell {
-    max-width: 1180px;
+    max-width: 1240px;
     margin: 0 auto;
-    padding-left: 24px;
-    padding-right: 24px;
+    padding: 0 24px;
   }
 
-  /* ---------- background texture ---------- */
-
-  .noise {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  .grid-field {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background-image:
-      linear-gradient(to right, rgba(255,255,255,0.035) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255,255,255,0.035) 1px, transparent 1px);
-    background-size: 56px 56px;
-    mask-image: radial-gradient(ellipse 70% 55% at 50% 0%, black 10%, transparent 75%);
-  }
-
-  .glow {
-    position: fixed;
-    z-index: 0;
-    pointer-events: none;
-    border-radius: 50%;
-    filter: blur(120px);
-  }
-  .glow-a {
-    top: -220px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 900px;
-    height: 480px;
-    background: radial-gradient(closest-side, rgba(52,211,153,0.16), transparent 70%);
-  }
-  .glow-b {
-    top: 40%;
-    right: -220px;
-    width: 560px;
-    height: 480px;
-    background: radial-gradient(closest-side, rgba(96,165,250,0.10), transparent 70%);
-  }
-
-  /* ---------- header ---------- */
-
+  /* ---------- Header ---------- */
   .site-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
     position: sticky;
     top: 0;
-    z-index: 40;
-    backdrop-filter: blur(14px);
-    background: rgba(8,9,12,0.72);
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    z-index: 50;
   }
 
   .header-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 68px;
+    height: 72px;
   }
 
   .brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     text-decoration: none;
-    color: inherit;
   }
 
-  .brand-mark {
-    width: 34px;
-    height: 34px;
+  .brand-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #0d233a;
+    color: #10b981;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 900;
-    font-size: 15px;
-    color: #06251d;
-    background: linear-gradient(135deg, #34d399, #2dd4bf);
-    box-shadow: 0 6px 18px rgba(52,211,153,0.28);
   }
 
-  .brand-word {
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .brand-name {
     font-weight: 800;
     font-size: 18px;
-    letter-spacing: -0.02em;
-    color: #fff;
+    letter-spacing: 0.02em;
+    color: #0d233a;
+    line-height: 1.1;
   }
-  .brand-dot { color: #34d399; }
+
+  .brand-tagline {
+    font-size: 11px;
+    color: #10b981;
+    font-weight: 500;
+  }
 
   .site-nav {
-    display: none;
-    align-items: center;
-    gap: 30px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #a8adb8;
-  }
-  .site-nav a { color: inherit; text-decoration: none; transition: color 0.15s ease; }
-  .site-nav a:hover { color: #34d399; }
-
-  @media (min-width: 860px) {
-    .site-nav { display: flex; }
-  }
-
-  .header-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 32px;
   }
 
-  /* ---------- buttons ---------- */
+  .nav-link {
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    padding-bottom: 4px;
+    transition: color 0.2s;
+  }
 
-  .btn-ghost, .btn-solid, .btn-outline {
+  .nav-link.active {
+    color: #0d233a;
+    border-bottom: 2px solid #10b981;
+  }
+
+  .btn-primary-header {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
+    background-color: #15803d;
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 8px;
     font-weight: 600;
+    font-size: 14px;
     text-decoration: none;
-    border-radius: 11px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-    white-space: nowrap;
+    transition: background-color 0.2s;
   }
 
-  .btn-ghost {
-    padding: 9px 14px;
-    font-size: 13px;
-    color: #c7cbd4;
-  }
-  .btn-ghost:hover { color: #fff; }
-
-  .btn-solid {
-    padding: 10px 18px;
-    font-size: 13px;
-    color: #06251d;
-    background: #34d399;
-    box-shadow: 0 6px 16px rgba(52,211,153,0.22);
-  }
-  .btn-solid:hover {
-    background: #4ee0ab;
-    box-shadow: 0 8px 22px rgba(52,211,153,0.32);
-    transform: translateY(-1px);
+  .btn-primary-header:hover {
+    background-color: #166534;
   }
 
-  .btn-outline {
-    padding: 10px 18px;
-    font-size: 13px;
-    color: #e7e9ee;
-    border: 1px solid rgba(255,255,255,0.16);
-    background: rgba(255,255,255,0.02);
-  }
-  .btn-outline:hover {
-    border-color: rgba(255,255,255,0.32);
-    background: rgba(255,255,255,0.05);
-  }
-
-  .btn-lg {
-    padding: 13px 22px;
-    font-size: 14.5px;
-    border-radius: 12px;
-  }
-
-  /* ---------- hero ---------- */
-
-  .hero {
+  /* ---------- Hero Section ---------- */
+  .hero-section {
+    background-color: #0d233a;
+    color: #ffffff;
+    padding: 72px 0 88px;
     position: relative;
-    z-index: 1;
+    overflow: hidden;
+  }
+
+  .hero-container {
     display: grid;
     grid-template-columns: 1fr;
     gap: 48px;
-    padding-top: 72px;
-    padding-bottom: 88px;
-    align-items: center;
   }
 
-  @media (min-width: 980px) {
-    .hero {
-      grid-template-columns: 1.05fr 0.95fr;
-      padding-top: 96px;
-      padding-bottom: 120px;
+  @media (min-width: 900px) {
+    .hero-container {
+      grid-template-columns: 1.4fr 0.8fr;
     }
   }
 
-  .pill {
-    display: inline-flex;
+  .hero-badge {
+    color: #bef264;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 7px 14px;
-    border-radius: 999px;
-    background: rgba(52,211,153,0.09);
-    border: 1px solid rgba(52,211,153,0.28);
-    color: #6ee7b7;
-    font-size: 12.5px;
-    font-weight: 600;
-    margin-bottom: 22px;
-  }
-  .pill-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #34d399;
-    box-shadow: 0 0 0 3px rgba(52,211,153,0.18);
+    gap: 6px;
   }
 
   .hero-title {
-    font-size: clamp(2.1rem, 4.6vw, 3.4rem);
+    font-size: clamp(2.4rem, 4vw, 3.6rem);
     font-weight: 800;
-    line-height: 1.12;
-    letter-spacing: -0.025em;
-    color: #fff;
+    line-height: 1.15;
     margin: 0 0 20px;
-  }
-
-  .hero-title-accent {
-    display: block;
-    background: linear-gradient(100deg, #6ee7b7, #5eead4 45%, #67e8f9);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .hero-desc {
-    font-size: 16.5px;
-    line-height: 1.65;
-    color: #9ba1ad;
-    max-width: 46ch;
-    margin: 0 0 32px;
-  }
-
-  .hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 44px;
-  }
-
-  .hero-stats {
-    display: grid;
-    grid-template-columns: repeat(3, auto);
-    gap: 28px;
-    margin: 0;
-    padding-top: 28px;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    max-width: 460px;
-  }
-  .hero-stat dt {
-    font-size: 21px;
-    font-weight: 800;
-    color: #fff;
-    margin: 0 0 2px;
-  }
-  .hero-stat dd {
-    font-size: 12px;
-    color: #7d8390;
-    margin: 0;
-    line-height: 1.4;
-  }
-
-  /* ---------- hero visual panel ---------- */
-
-  .hero-panel {
-    position: relative;
-  }
-
-  .panel-window {
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: linear-gradient(165deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
-    box-shadow: 0 30px 70px -20px rgba(0,0,0,0.6);
-    overflow: hidden;
-    backdrop-filter: blur(6px);
-  }
-
-  .panel-topbar {
-    display: flex;
-    gap: 6px;
-    padding: 14px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-  }
-  .panel-topbar span {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.14);
-  }
-
-  .panel-body {
-    padding: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .task-card {
-    border-radius: 14px;
-    padding: 16px;
-    background: rgba(255,255,255,0.035);
-    border: 1px solid rgba(255,255,255,0.08);
-  }
-  .task-card-dim { opacity: 0.62; }
-
-  .task-card-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-
-  .task-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 9px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    color: #06251d;
-    background: #34d399;
-  }
-  .task-avatar-b { background: #60a5fa; color: #061a33; }
-
-  .task-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: #eef0f3;
-    margin: 0;
-  }
-  .task-meta {
-    font-size: 11.5px;
-    color: #7d8390;
-    margin: 1px 0 0;
-  }
-  .task-price {
-    margin-left: auto;
-    font-size: 13px;
-    font-weight: 700;
-    color: #6ee7b7;
-    white-space: nowrap;
-  }
-
-  .task-title {
-    font-size: 14px;
-    font-weight: 500;
-    color: #d5d8de;
-    margin: 0 0 12px;
-    line-height: 1.4;
-  }
-
-  .task-tags {
-    display: flex;
-    gap: 8px;
-  }
-  .task-tags span {
-    font-size: 10.5px;
-    font-weight: 600;
-    padding: 4px 9px;
-    border-radius: 6px;
-    background: rgba(255,255,255,0.05);
-    color: #9ba1ad;
-    border: 1px solid rgba(255,255,255,0.06);
-  }
-
-  /* ---------- section head ---------- */
-
-  .section-head {
-    margin-bottom: 32px;
-  }
-  .section-head h2 {
-    font-size: clamp(1.5rem, 2.6vw, 1.9rem);
-    font-weight: 800;
     letter-spacing: -0.02em;
-    color: #fff;
-    margin: 0 0 8px;
-  }
-  .section-head p {
-    font-size: 14.5px;
-    color: #8b909c;
-    margin: 0;
   }
 
-  .section-head-row {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  @media (min-width: 700px) {
-    .section-head-row {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
+  .highlight-text {
+    color: #d9f99d;
   }
 
-  .link-arrow {
-    font-size: 13px;
-    font-weight: 600;
-    color: #34d399;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-  .link-arrow:hover { color: #6ee7b7; }
-
-  /* ---------- roles ---------- */
-
-  .roles {
-    position: center;
-    z-index: 1;
-    padding-bottom: 150px;
+  .hero-subtitle {
+    color: #94a3b8;
+    font-size: 16px;
+    line-height: 1.6;
+    max-width: 520px;
+    margin-bottom: 36px;
   }
 
-  .roles-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  @media (min-width: 780px) {
-    .roles-grid { flex-direction: row; }
-  }
-
-  .role-card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    padding: 26px 24px;
-    border-radius: 18px;
-    text-decoration: none;
-    color: inherit;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
-  }
-  .role-card:hover {
-    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-    background: rgba(255,255,255,0.045);
-    transform: translateY(-3px);
-  }
-
-  .role-icon {
-    width: 44px;
-    height: 44px;
+  .search-box {
+    background: #ffffff;
     border-radius: 12px;
+    padding: 6px 6px 6px 16px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 19px;
-    margin-bottom: 18px;
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
-    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    max-width: 560px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
   }
 
-  .role-label {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--accent);
-    margin-bottom: 6px;
+  .search-icon {
+    margin-right: 12px;
   }
 
-  .role-title {
+  .search-box input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 14px;
+    color: #1e293b;
+  }
+
+  .btn-search {
+    background-color: #15803d;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+  }
+
+  .btn-search:hover {
+    background-color: #166534;
+  }
+
+  .hero-stats-panel {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    padding-top: 12px;
+  }
+
+  .stats-divider {
+    width: 1px;
+    height: 180px;
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .stat-number {
+    font-size: 80px;
+    font-weight: 900;
+    color: #d9f99d;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+  }
+
+  .stat-label {
     font-size: 18px;
     font-weight: 700;
-    color: #fff;
-    margin: 0 0 10px;
-    letter-spacing: -0.01em;
-  }
-
-  .role-desc {
-    font-size: 13.5px;
-    line-height: 1.55;
-    color: #8b909c;
-    margin: 0 0 20px;
-    flex-grow: 1;
-  }
-
-  .role-cta {
-    font-size: 13px;
-    font-weight: 600;
-    color: #dfe1e6;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .role-arrow {
-    transition: transform 0.2s ease;
-    color: var(--accent);
-  }
-  .role-card:hover .role-arrow { transform: translateX(3px); }
-
-  /* ---------- categories ---------- */
-
-  .categories {
-    position: relative;
-    z-index: 1;
-    padding-bottom: 100px;
-  }
-
-  .categories-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  @media (min-width: 700px) {
-    .categories-grid { grid-template-columns: repeat(4, 1fr); }
-  }
-
-  .category-card {
-    position: relative;
-    text-align: left;
-    padding: 20px 18px;
-    border-radius: 16px;
-    background: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,255,255,0.07);
-    cursor: pointer;
-    font: inherit;
-    color: inherit;
-    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .category-card:hover {
-    border-color: color-mix(in srgb, var(--accent) 42%, transparent);
-    background: rgba(255,255,255,0.045);
-    transform: translateY(-2px);
-  }
-
-  .category-tag {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 999px;
-    color: #06251d;
-    background: #34d399;
-  }
-
-  .category-icon {
-    font-size: 24px;
-    line-height: 1;
-  }
-
-  .category-title {
-    font-size: 14.5px;
-    font-weight: 700;
-    color: #eef0f3;
+    color: #ffffff;
+    margin: 12px 0 32px;
     line-height: 1.3;
   }
 
-  .category-count {
-    font-size: 12px;
-    font-weight: 500;
-    color: #757b87;
+  .quote-box {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 16px;
   }
 
-  /* ---------- cta band ---------- */
-
-  .cta-band {
-    position: relative;
-    z-index: 1;
-    padding-bottom: 96px;
+  .quote-text {
+    font-style: italic;
+    color: #94a3b8;
+    font-size: 13.5px;
+    margin: 0 0 12px;
   }
 
-  .cta-band-inner {
-    border-radius: 22px;
-    padding: 44px 36px;
-    background: linear-gradient(135deg, rgba(52,211,153,0.11), rgba(45,212,191,0.05));
-    border: 1px solid rgba(52,211,153,0.22);
+  .quote-footer {
     display: flex;
-    flex-direction: column;
-    gap: 24px;
-    align-items: flex-start;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
   }
-  @media (min-width: 780px) {
-    .cta-band-inner {
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
+
+  .check-icon {
+    color: #d9f99d;
+    font-weight: bold;
+  }
+
+  .check-text {
+    color: #d9f99d;
+    font-weight: 600;
+  }
+
+  .sdg-badge {
+    margin-left: auto;
+    color: #64748b;
+    font-weight: 700;
+  }
+
+  /* ---------- Main Content ---------- */
+  .main-content {
+    padding: 48px 0 80px;
+  }
+
+  .section-label {
+    color: #15803d;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #0d233a;
+    margin: 0;
+  }
+
+  .task-count {
+    color: #94a3b8;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .category-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 32px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .tab-btn {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active {
+    background-color: #0d233a;
+    color: #ffffff;
+    border-color: #0d233a;
+  }
+
+  /* ---------- Tasks Grid & Cards ---------- */
+  .tasks-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  @media (min-width: 768px) {
+    .tasks-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 
-  .cta-band-inner h2 {
-    font-size: clamp(1.4rem, 2.4vw, 1.7rem);
+  .task-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .badge-cat {
+    background-color: #dc262615;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #166534;
+  }
+
+  .status-indicator .dot {
+    width: 7px;
+    height: 7px;
+    background-color: #22c55e;
+    border-radius: 50%;
+  }
+
+  .task-title {
+    font-size: 18px;
     font-weight: 800;
-    color: #fff;
-    margin: 0 0 8px;
-    letter-spacing: -0.02em;
+    color: #0f172a;
+    margin: 0 0 12px;
+    line-height: 1.3;
   }
-  .cta-band-inner p {
+
+  .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  .task-desc {
     font-size: 14px;
-    color: #a8ac9f;
-    margin: 0;
-    max-width: 44ch;
+    color: #475569;
+    line-height: 1.5;
+    margin: 0 0 16px;
   }
 
-  /* ---------- footer ---------- */
+  .tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
 
+  .tag-pill {
+    background-color: #f1f5f9;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .card-footer {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .reward-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+  }
+
+  .reward-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .duration-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-action {
+    background-color: #0d233a;
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+  }
+
+  .btn-action:hover {
+    background-color: #1e293b;
+  }
+
+  /* ---------- Footer ---------- */
   .site-footer {
-    position: relative;
-    z-index: 1;
-    border-top: 1px solid rgba(255,255,255,0.07);
+    background-color: #0d233a;
+    border-top: 1px solid #1e293b;
+    padding: 32px 0;
+    color: #94a3b8;
   }
 
   .footer-row {
     display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding: 30px 24px;
-    font-size: 12.5px;
-    color: #6d7280;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
   }
-  @media (min-width: 700px) {
-    .footer-row {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
-    }
-  }
-  .footer-row strong { color: #a8adb8; }
 
-  .footer-nav {
-    display: flex;
-    gap: 22px;
+  .footer-brand {
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.05em;
   }
-  .footer-nav a {
-    color: inherit;
-    text-decoration: none;
+
+  .footer-sub {
+    margin: 2px 0 0;
+    font-size: 12px;
   }
-  .footer-nav a:hover { color: #c7cbd4; }
+
+  .copyright {
+    margin: 0;
+  }
 </style>

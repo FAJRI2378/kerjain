@@ -33,68 +33,444 @@
   }
 </script>
 
-<div class="relative min-h-screen bg-slate-950 text-white flex items-center justify-center p-4 overflow-hidden selection:bg-emerald-500 selection:text-white">
-  <div class="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none"></div>
-  <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="login-page">
+  <!-- Decorative background elements -->
+  <div class="bg-shape shape-a"></div>
+  <div class="bg-shape shape-b"></div>
 
-  <div class="relative z-10 w-full max-w-md bg-slate-900/80 border border-slate-800 backdrop-blur-2xl p-8 rounded-3xl shadow-2xl space-y-6">
-
-    <div>
-      <a href="/" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition group">
-        <span class="w-7 h-7 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center group-hover:border-slate-700 group-hover:bg-slate-800 transition">←</span>
+  <div class="login-card">
+    <div class="card-header-actions">
+      <a href="/" class="back-link">
+        <span class="back-arrow">←</span>
         Kembali ke Beranda
       </a>
     </div>
 
-    <div class="text-center space-y-2">
-      <a href="/" class="inline-flex items-center gap-2 mb-1">
-        <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center font-black text-slate-950 text-sm shadow-lg shadow-emerald-500/30">K</div>
-        <span class="font-extrabold text-xl tracking-tight text-white">KERJAIN<span class="text-emerald-400">.</span></span>
+    <div class="brand-heading">
+      <a href="/" class="brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="3" ry="3"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">KERJAIN</span>
+          <span class="brand-tagline">Kerja kecil, dampak besar</span>
+        </div>
       </a>
-      <h1 class="text-2xl font-black tracking-tight text-white">Selamat Datang Kembali</h1>
-      <p class="text-xs text-slate-400">Masuk ke akun kamu untuk melanjutkan</p>
+      <h1 class="page-title">Selamat Datang Kembali</h1>
+      <p class="page-subtitle">Masuk ke akun kamu untuk melanjutkan</p>
     </div>
 
-    <div class="grid grid-cols-2 gap-1 p-1 bg-slate-950/80 rounded-2xl border border-slate-800 text-xs font-semibold">
-      <button type="button" onclick={() => role = 'freelancer'}
-        class={`py-2 rounded-xl transition flex items-center justify-center gap-2 ${role === 'freelancer' ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20' : 'text-slate-400 hover:text-white'}`}><span>🛠️</span> Freelancer</button>
-      <button type="button" onclick={() => role = 'hirer'}
-        class={`py-2 rounded-xl transition flex items-center justify-center gap-2 ${role === 'hirer' ? 'bg-blue-500 text-slate-950 font-bold shadow-md shadow-blue-500/20' : 'text-slate-400 hover:text-white'}`}><span>🏢</span> UMKM</button>
+    <!-- Role Switcher Tabs -->
+    <div class="role-selector">
+      <button 
+        type="button" 
+        onclick={() => role = 'freelancer'}
+        class="role-btn {role === 'freelancer' ? 'active-freelancer' : ''}">
+        <span>🛠️ Freelancer</span>
+      </button>
+      <button 
+        type="button" 
+        onclick={() => role = 'hirer'}
+        class="role-btn {role === 'hirer' ? 'active-hirer' : ''}">
+        <span>🏢 UMKM / Employer</span>
+      </button>
     </div>
 
-    <form onsubmit={handleLogin} class="space-y-4 text-xs">
-      <div>
-        <label for="email" class="block font-medium text-slate-300 mb-1.5">Alamat Email</label>
-        <input id="email" type="email" required placeholder="nama@email.com" bind:value={email}
-          class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition" />
-        {#if formErrors.email}<p class="text-red-400 mt-1">{(formErrors.email).join(', ')}</p>{/if}
+    <!-- Login Form -->
+    <form onsubmit={handleLogin} class="login-form">
+      <div class="form-group">
+        <label for="email">Alamat Email</label>
+        <input 
+          id="email" 
+          type="email" 
+          required 
+          placeholder="nama@email.com" 
+          bind:value={email}
+        />
+        {#if formErrors.email}
+          <p class="error-msg">{(formErrors.email).join(', ')}</p>
+        {/if}
       </div>
 
-      <div>
-        <div class="flex justify-between items-center mb-1.5">
-          <label for="password" class="font-medium text-slate-300">Kata Sandi</label>
+      <div class="form-group">
+        <div class="label-row">
+          <label for="password">Kata Sandi</label>
         </div>
-        <div class="relative">
-          <input id="password" type={showPassword ? 'text' : 'password'} required placeholder="• • • • • • • •" bind:value={password}
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition pr-10" />
-          <button type="button" onclick={() => showPassword = !showPassword} class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition text-xs">{showPassword ? 'Sembunyi' : 'Lihat'}</button>
+        <div class="password-wrapper">
+          <input 
+            id="password" 
+            type={showPassword ? 'text' : 'password'} 
+            required 
+            placeholder="• • • • • • • •" 
+            bind:value={password}
+          />
+          <button 
+            type="button" 
+            onclick={() => showPassword = !showPassword} 
+            class="toggle-password">
+            {showPassword ? 'Sembunyi' : 'Lihat'}
+          </button>
         </div>
-        {#if formErrors.password}<p class="text-red-400 mt-1">{(formErrors.password).join(', ')}</p>{/if}
+        {#if formErrors.password}
+          <p class="error-msg">{(formErrors.password).join(', ')}</p>
+        {/if}
       </div>
 
-      <button type="submit" disabled={submitting}
-        class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition duration-200 mt-2 disabled:opacity-50">
+      <button 
+        type="submit" 
+        disabled={submitting}
+        class="btn-submit {role === 'hirer' ? 'btn-hirer' : 'btn-freelancer'}">
         {submitting ? 'Memproses...' : 'Masuk Akun'}
       </button>
     </form>
 
-    <div class="text-center text-xs text-slate-400 pt-2 border-t border-slate-800/60">
-      Belum punya akun?
-      <a href="/register" class="text-emerald-400 font-semibold hover:underline">Daftar sekarang</a>
-    </div>
+    <div class="card-footer">
+      <p class="register-prompt">
+        Belum punya akun?
+        <a href="/register" class="register-link">Daftar sekarang</a>
+      </p>
 
-    <div class="text-center text-[10px] text-slate-600">
-      <a href="/admin/login" class="hover:text-slate-400 transition">Karyawan / Staff? Masuk disini</a>
+      <div class="admin-link-wrapper">
+        <a href="/admin/login" class="admin-link">Karyawan / Staff? Masuk disini</a>
+      </div>
     </div>
   </div>
 </div>
+
+<style>
+  :global(body) {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8fafc;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  .login-page {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    background-color: #f8fafc;
+    overflow: hidden;
+  }
+
+  /* Decorative Background Glows */
+  .bg-shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .shape-a {
+    top: -100px;
+    left: -100px;
+    width: 400px;
+    height: 400px;
+    background: rgba(16, 185, 129, 0.12);
+  }
+  .shape-b {
+    bottom: -100px;
+    right: -100px;
+    width: 400px;
+    height: 400px;
+    background: rgba(13, 35, 58, 0.08);
+  }
+
+  .login-card {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 440px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 10px 25px -5px rgba(13, 35, 58, 0.05), 0 8px 10px -6px rgba(13, 35, 58, 0.02);
+  }
+
+  /* Header Navigation & Brand */
+  .card-header-actions {
+    margin-bottom: 20px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .back-link:hover {
+    color: #0d233a;
+  }
+
+  .back-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+  }
+
+  .brand-heading {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    margin-bottom: 16px;
+  }
+
+  .brand-icon {
+    width: 36px;
+    height: 36px;
+    background-color: #0d233a;
+    color: #10b981;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  .brand-name {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: 0.02em;
+    color: #0d233a;
+    line-height: 1.1;
+  }
+
+  .brand-tagline {
+    font-size: 10px;
+    color: #10b981;
+    font-weight: 600;
+  }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0d233a;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  /* Role Switcher */
+  .role-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 4px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+
+  .role-btn {
+    border: none;
+    background: transparent;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .role-btn.active-freelancer {
+    background: #15803d;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(21, 128, 61, 0.2);
+  }
+
+  .role-btn.active-hirer {
+    background: #0d233a;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(13, 35, 58, 0.2);
+  }
+
+  /* Form Elements */
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .form-group label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 6px;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 11px 14px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13.5px;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-group input:focus {
+    border-color: #15803d;
+    box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.12);
+  }
+
+  .password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .password-wrapper input {
+    padding-right: 70px;
+  }
+
+  .toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+  }
+
+  .toggle-password:hover {
+    color: #0d233a;
+  }
+
+  .error-msg {
+    color: #dc2626;
+    font-size: 11.5px;
+    margin: 4px 0 0;
+    font-weight: 500;
+  }
+
+  /* Submit Button */
+  .btn-submit {
+    margin-top: 8px;
+    width: 100%;
+    padding: 12px;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+  }
+
+  .btn-submit.btn-freelancer {
+    background-color: #15803d;
+    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.15);
+  }
+
+  .btn-submit.btn-freelancer:hover:not(:disabled) {
+    background-color: #166534;
+  }
+
+  .btn-submit.btn-hirer {
+    background-color: #0d233a;
+    box-shadow: 0 4px 12px rgba(13, 35, 58, 0.15);
+  }
+
+  .btn-submit.btn-hirer:hover:not(:disabled) {
+    background-color: #1e293b;
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Footer Links */
+  .card-footer {
+    text-align: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .register-prompt {
+    font-size: 12.5px;
+    color: #64748b;
+    margin: 0 0 12px;
+  }
+
+  .register-link {
+    color: #15803d;
+    font-weight: 700;
+    text-decoration: none;
+    margin-left: 4px;
+  }
+
+  .register-link:hover {
+    text-decoration: underline;
+  }
+
+  .admin-link-wrapper {
+    font-size: 11px;
+  }
+
+  .admin-link {
+    color: #94a3b8;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .admin-link:hover {
+    color: #0d233a;
+  }
+</style>
