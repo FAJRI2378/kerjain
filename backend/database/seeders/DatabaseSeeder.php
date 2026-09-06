@@ -31,5 +31,9 @@ class DatabaseSeeder extends Seeder
             'name' => 'Andi Pratama',
             'email' => 'andi@worker.id',
         ]);
+
+        $this->call([
+            DemoDataSeeder::class,
+        ]);
     }
 }

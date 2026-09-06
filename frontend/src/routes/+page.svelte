@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client.js';
-  import { formatRupiah } from '$lib/format.js';
+  import { formatRupiah, formatNumber } from '$lib/format.js';
 
   const PER_PAGE = 6;
   const VISIBLE_CHIPS = 8;
@@ -14,6 +14,7 @@
   let page = $state(1);
   let lastPage = $state(1);
   let total = $state(0);
+  let openJobTotal = $state(0);
   let loading = $state(true);
   let loadError = $state(null);
   let categorySelectValue = $state("");
@@ -54,6 +55,9 @@
       page = res.meta?.current_page ?? 1;
       lastPage = res.meta?.last_page ?? 1;
       total = res.meta?.total ?? jobs.length;
+      if (!activeSearch.trim() && selectedSlug === 'all') {
+        openJobTotal = total;
+      }
     } catch (err) {
       jobs = [];
       total = 0;
@@ -167,8 +171,8 @@
       <div class="hero-stats-panel">
         <div class="stats-divider"></div>
         <div class="stats-body">
-          <div class="stat-number">1000<span class="plus">+</span></div>
-          <p class="stat-label">tugas<br />siap dikerjakan</p>
+          <div class="stat-number">{formatNumber(openJobTotal)}</div>
+          <p class="stat-label">tugas siap <br />dikerjakan</p>
           <div class="quote-box">
             <p class="quote-text">“Peluang pertama bisa dimulai dari jarak terdekat.”</p>
             <div class="quote-footer">
