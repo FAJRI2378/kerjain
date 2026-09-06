@@ -106,12 +106,6 @@
           bind:value={searchQuery}
         />
       </div>
-
-      <!-- Filter Slider Budget Lanjutan -->
-      <div class="budget-filter-box">
-        <span class="budget-filter-label">Maks. Budget: <strong>{formatRupiah(maxBudget)}</strong></span>
-        <input type="range" min="100000" max="5000000" step="100000" bind:value={maxBudget} class="range-slider" />
-      </div>
     </div>
   </div>
 

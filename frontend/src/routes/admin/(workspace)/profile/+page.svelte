@@ -1,21 +1,25 @@
 <script>
-  import AccountCard from '$lib/components/profile/account-card.svelte';
   import ChangePasswordCard from '$lib/components/profile/change-password-card.svelte';
 </script>
 
-<div class="admin-profile-page p-6 md:p-10 space-y-6 font-sans max-w-4xl">
-  <div class="border-b border-slate-800/80 pb-6 profile-header">
+<div class="admin-profile-page p-6 md:p-10 space-y-6 font-sans">
+  
+  <!-- Header Halaman -->
+  <div class="border-b border-slate-800/85 pb-6 profile-header">
     <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight profile-title">Profil & Keamanan</h1>
     <p class="text-xs md:text-sm text-slate-400 profile-sub">Kelola data akun dan kata sandi admin.</p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <AccountCard />
+  <!-- Konten Kartu Menumpuk ke Bawah (1 Kolom Lebar) -->
+  <div class="space-y-6 max-w-4xl">
+
     <ChangePasswordCard />
   </div>
+
 </div>
 
 <style>
+  /* Light Theme Adjustments */
   :global(body:not(.dark-theme)) .admin-profile-page {
     background-color: #f8fafc !important;
     color: #0f172a !important;

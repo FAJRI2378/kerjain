@@ -54,7 +54,7 @@ class AuthController extends Controller
         }
 
         if ($user->role !== $request->role) {
-            return response()->json(['message' => 'Role mismatch.'], 403);
+            return response()->json(['message' => 'Email anda sudah terdaftar dengan role yang berbeda'], 403);
         }
 
         if (! $user->is_active) {

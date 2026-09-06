@@ -133,12 +133,11 @@
           {:else}
             🌙
           {/if}
-        </button>
-
-        <a href="/register" class="btn-primary-header">
-          <span class="plus-icon">+</span> Buka Lowongan / Cari Pekerjaan
-        </a>
-      </nav>
+        </button>             
+          <a href="/register" class="btn-primary-header hover:no-underline hover:text-white">
+        <span class="plus-icon">+</span> Buka Lowongan / Cari Pekerjaan
+         </a>
+     </nav>
     </div>
   </header>
 

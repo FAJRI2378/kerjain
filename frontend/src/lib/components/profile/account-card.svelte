@@ -1,6 +1,7 @@
 <script>
   import { auth } from '$lib/stores/auth.svelte.js';
   import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
+  import { getBlobUrl } from '$lib/api/client.js'; // Tambahkan import getBlobUrl
 
   let name = $state('');
   let email = $state('');
@@ -14,8 +15,22 @@
       name = auth.user.name ?? '';
       email = auth.user.email ?? '';
       phone = auth.user.phone ?? '';
+      
+      // PERBAIKAN: Gunakan getBlobUrl untuk memuat gambar dari backend
       if (!avatarFile) {
-        avatarPreview = auth.user.avatar_url || auth.user.avatar || '';
+        const path = auth.user.avatar_url || auth.user.avatar;
+        if (path) {
+          getBlobUrl(path)
+            .then(url => {
+              avatarPreview = url;
+            })
+            .catch(err => {
+              console.error("Gagal memuat foto profil:", err);
+              avatarPreview = '';
+            });
+        } else {
+          avatarPreview = '';
+        }
       }
     }
   });
@@ -28,7 +43,7 @@
     }
   }
 
-  async function handleSave(e) {
+async function handleSave(e) {
     e.preventDefault();
     saving = true;
     try {
@@ -39,7 +54,19 @@
       if (avatarFile) {
         formData.append('avatar', avatarFile);
       }
+      
+      // Simpan perubahan ke backend
       await auth.updateProfile(formData);
+
+      // --- TAMBAHKAN BARIS INI ---
+      // Meminta data user terbaru dari server agar avatar ter-refresh
+      if (typeof auth.fetchUser === 'function') {
+        await auth.fetchUser();
+      } else if (typeof auth.hydrate === 'function') {
+        await auth.hydrate();
+      }
+      // ----------------------------
+
       toast('Data akun berhasil diperbarui!', 'success');
       avatarFile = null;
     } catch (err) {

@@ -31,10 +31,17 @@
   {#if loading}
     <p class="loading-text">Memuat profil...</p>
   {:else}
-    <div class="grid">
-      <VerificationStatusCard role="freelancer" isVerified={!!auth.user?.is_verified} {verification} />
-      <AccountCard />
-      <ChangePasswordCard />
+    <div class="profile-layout">
+      <!-- Kolom Kiri: Status Verifikasi & Ubah Kata Sandi menumpuk rapat ke atas -->
+      <div class="left-column">
+        <VerificationStatusCard role="freelancer" isVerified={!!auth.user?.is_verified} {verification} />
+        <ChangePasswordCard />
+      </div>
+      
+      <!-- Kolom Kanan: Data Akun -->
+      <div class="right-column">
+        <AccountCard />
+      </div>
     </div>
   {/if}
 </div>
@@ -78,18 +85,32 @@
     font-size: 13px;
   }
 
-  .grid {
+  /* --- LAYOUT GRID DUA KOLOM VERTIKAL --- */
+  .profile-layout {
     display: grid;
     grid-template-columns: 1fr;
     gap: 20px;
+    align-items: start; /* Mencegah elemen saling melar tingginya */
+  }
+
+  .left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .right-column {
+    display: flex;
+    flex-direction: column;
   }
 
   @media (min-width: 768px) {
-    .grid {
+    .profile-layout {
       grid-template-columns: 1fr 1fr;
     }
   }
 
+  /* --- TEMA GELAP (DARK MODE) --- */
   :global(body.dark-theme .page-header) {
     background-color: #1e293b !important;
     border-color: #334155 !important;
