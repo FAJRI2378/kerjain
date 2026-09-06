@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { writable, derived } from 'svelte/store';
   import { api } from '$lib/api/client.js';
+  import { theme } from '$lib/stores/theme.js';
   import { formatRupiah, formatNumber } from '$lib/format.js';
 
   const PER_PAGE = 6;
@@ -20,7 +21,6 @@
   let loading = writable(true);
   let loadError = writable(null);
   let categorySelectValue = writable("");
-  let isDarkMode = writable(false); 
 
   // Konversi $derived menjadi derived store
   let visibleCategories = derived(categories, $c => $c.slice(0, VISIBLE_CHIPS));
@@ -92,29 +92,11 @@
     $page = p;
     loadJobs();
   }
-
-  onMount(() => {
-    $isDarkMode = document.body.classList.contains('dark-theme');
-    
-    const savedTheme = localStorage.getItem('kerjain-theme');
-    if (!$isDarkMode && (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches))) {
-      $isDarkMode = true;
-      document.body.classList.add('dark-theme');
-    }
-
+onMount(() => {
+    theme.init();
     Promise.all([loadCategories(), loadJobs()]).catch(() => {});
   });
 
-  function toggleTheme() {
-    $isDarkMode = !$isDarkMode;
-    if ($isDarkMode) {
-      document.body.classList.add('dark-theme');
-      localStorage.setItem('kerjain-theme', 'dark');
-    } else {
-      document.body.classList.remove('dark-theme');
-      localStorage.setItem('kerjain-theme', 'light');
-    }
-  }
 </script>
 
 <div class="page">
@@ -131,13 +113,13 @@
       </a>
 
       <nav class="site-nav">
-       <a 
-        href="/register" 
-        class="btn-primary-header hover:no-underline hover:text-white"
-        data-sveltekit-preload-data="off"
-      >
-        <span class="plus-icon">+</span> Buka Lowongan / Cari Pekerjaan
-      </a>
+      <a 
+  href="/register" 
+  class="btn-primary-header hover:no-underline hover:text-white"
+  data-sveltekit-preload-data="off"
+>
+  <span class="plus-icon">+</span> Buka Lowongan / Cari Pekerjaan
+</a>
       </nav>
     </div>
   </header>
@@ -330,15 +312,15 @@
     </div>
   </footer>
 
-  <button 
-    type="button" 
-    class="floating-theme-toggle {$isDarkMode ? 'is-dark' : ''}" 
-    onclick={toggleTheme} 
-    aria-label="Toggle Dark Mode"
-  >
-    <span class="icon sun">☀️</span>
-    <span class="icon moon">🌙</span>
-  </button>
+<button 
+  type="button" 
+  class="floating-theme-toggle {$theme ? 'is-dark' : ''}" 
+  onclick={() => theme.toggle()} 
+  aria-label="Toggle Dark Mode"
+>
+  <span class="icon sun">☀️</span>
+  <span class="icon moon">🌙</span>
+</button>
 </div>
 
 <style>
@@ -384,11 +366,12 @@
   }
 
   /* Dark Mode Overrides */
+/* Dark Mode Overrides yang Dipaksa Putih & Kontras */
   :global(body.dark-theme) {
     --bg-body: #0f172a;
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
+    --text-primary: #ffffff;      /* Dipaksa putih bersih */
+    --text-secondary: #f1f5f9;    /* Dipaksa putih hampir terang */
+    --text-muted: #cbd5e1;        /* Diubah jadi abu-abu terang agar tetap terbaca */
 
     --bg-surface: #1e293b;
     --border-color: #334155;
@@ -403,25 +386,25 @@
 
     --hero-bg: #09131f;
     --hero-text: #ffffff;
-    --hero-subtitle: #94a3b8;
+    --hero-subtitle: #e2e8f0;     /* Dipaksa terang */
     --hero-divider: rgba(255, 255, 255, 0.1);
     
-    --search-icon: #94a3b8;
+    --search-icon: #e2e8f0;
 
     --tab-bg: #1e293b;
-    --tab-text: #cbd5e1;
+    --tab-text: #ffffff;          /* Text tab kategori jadi putih */
     --tab-active-bg: #d9f99d;
     --tab-active-text: #0f172a;
 
     --badge-cat-bg: rgba(34, 197, 94, 0.2);
     --badge-cat-text: #4ade80;
     --tag-bg: #334155;
-    --tag-text: #e2e8f0;
+    --tag-text: #ffffff;          /* Tag/pill jadi putih */
 
     --footer-bg: #09131f;
     --footer-border: #1e293b;
     
-    --brand-text: #f8fafc;
+    --brand-text: #ffffff;        /* Tulisan brand KERJAIN jadi putih */
   }
 
   /* ================= GLOBAL STYLES ================= */
