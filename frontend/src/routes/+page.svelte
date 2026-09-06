@@ -1,32 +1,35 @@
 <script>
   import { onMount } from 'svelte';
+  import { writable, derived } from 'svelte/store';
   import { api } from '$lib/api/client.js';
   import { formatRupiah, formatNumber } from '$lib/format.js';
 
   const PER_PAGE = 6;
   const VISIBLE_CHIPS = 8;
 
-  let searchQuery = $state("");
-  let activeSearch = $state("");
-  let selectedSlug = $state("all");
-  let categories = $state([]);
-  let jobs = $state([]);
-  let page = $state(1);
-  let lastPage = $state(1);
-  let total = $state(0);
-  let openJobTotal = $state(0);
-  let loading = $state(true);
-  let loadError = $state(null);
-  let categorySelectValue = $state("");
-  let isDarkMode = $state(false); // State untuk mendeteksi mode saat ini
+  // Konversi $state menjadi writable store
+  let searchQuery = writable("");
+  let activeSearch = writable("");
+  let selectedSlug = writable("all");
+  let categories = writable([]);
+  let jobs = writable([]);
+  let page = writable(1);
+  let lastPage = writable(1);
+  let total = writable(0);
+  let openJobTotal = writable(0);
+  let loading = writable(true);
+  let loadError = writable(null);
+  let categorySelectValue = writable("");
+  let isDarkMode = writable(false); 
 
-  let visibleCategories = $derived(categories.slice(0, VISIBLE_CHIPS));
-  let hiddenCategories = $derived(categories.slice(VISIBLE_CHIPS));
+  // Konversi $derived menjadi derived store
+  let visibleCategories = derived(categories, $c => $c.slice(0, VISIBLE_CHIPS));
+  let hiddenCategories = derived(categories, $c => $c.slice(VISIBLE_CHIPS));
 
-  let pages = $derived.by(() => {
-    if (lastPage <= 7) return Array.from({ length: lastPage }, (_, i) => i + 1);
-    const window = [...new Set([1, 2, lastPage - 1, lastPage, page, page - 1, page + 1])]
-      .filter((p) => p >= 1 && p <= lastPage)
+  let pages = derived([lastPage, page], ([$lastPage, $page]) => {
+    if ($lastPage <= 7) return Array.from({ length: $lastPage }, (_, i) => i + 1);
+    const window = [...new Set([1, 2, $lastPage - 1, $lastPage, $page, $page - 1, $page + 1])]
+      .filter((p) => p >= 1 && p <= $lastPage)
       .sort((a, b) => a - b);
     const out = [];
     let prev = 0;
@@ -40,68 +43,71 @@
 
   async function loadCategories() {
     const res = await api.get('/api/categories');
-    categories = res.data ?? [];
+    $categories = res.data ?? [];
   }
 
   async function loadJobs() {
-    loading = true;
-    loadError = null;
+    $loading = true;
+    $loadError = null;
     try {
-      const params = new URLSearchParams({ per_page: String(PER_PAGE), page: String(page) });
-      if (activeSearch.trim()) params.set('search', activeSearch.trim());
-      if (selectedSlug !== 'all') params.set('category', selectedSlug);
+      const params = new URLSearchParams({ per_page: String(PER_PAGE), page: String($page) });
+      if ($activeSearch.trim()) params.set('search', $activeSearch.trim());
+      if ($selectedSlug !== 'all') params.set('category', $selectedSlug);
+      
       const res = await api.get(`/api/jobs?${params.toString()}`);
-      jobs = res.data ?? [];
-      page = res.meta?.current_page ?? 1;
-      lastPage = res.meta?.last_page ?? 1;
-      total = res.meta?.total ?? jobs.length;
-      if (!activeSearch.trim() && selectedSlug === 'all') {
-        openJobTotal = total;
+      
+      $jobs = res.data ?? [];
+      $page = res.meta?.current_page ?? 1;
+      $lastPage = res.meta?.last_page ?? 1;
+      $total = res.meta?.total ?? $jobs.length;
+      
+      if (!$activeSearch.trim() && $selectedSlug === 'all') {
+        $openJobTotal = $total;
       }
     } catch (err) {
-      jobs = [];
-      total = 0;
-      loadError = err.message || 'Gagal memuat tugas.';
+      $jobs = [];
+      $total = 0;
+      $loadError = err.message || 'Gagal memuat tugas.';
     } finally {
-      loading = false;
+      $loading = false;
     }
   }
 
   function handleSearch(event) {
     event.preventDefault();
-    activeSearch = searchQuery;
-    page = 1;
+    $activeSearch = $searchQuery;
+    $page = 1;
     loadJobs();
   }
 
   function selectCategory(slug) {
-    selectedSlug = slug;
-    categorySelectValue = "";
-    page = 1;
+    $selectedSlug = slug;
+    $categorySelectValue = "";
+    $page = 1;
     loadJobs();
   }
 
   function goToPage(p) {
-    if (p < 1 || p > lastPage || p === page) return;
-    page = p;
+    if (p < 1 || p > $lastPage || p === $page) return;
+    $page = p;
     loadJobs();
   }
 
-  // Load preferensi tema pengguna saat komponen dimuat
   onMount(() => {
+    $isDarkMode = document.body.classList.contains('dark-theme');
+    
     const savedTheme = localStorage.getItem('kerjain-theme');
-    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      isDarkMode = true;
+    if (!$isDarkMode && (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches))) {
+      $isDarkMode = true;
       document.body.classList.add('dark-theme');
     }
 
     Promise.all([loadCategories(), loadJobs()]).catch(() => {});
   });
 
-  // Fungsi mengubah tema
   function toggleTheme() {
-    isDarkMode = !isDarkMode;
-    if (isDarkMode) {
+    $isDarkMode = !$isDarkMode;
+    if ($isDarkMode) {
       document.body.classList.add('dark-theme');
       localStorage.setItem('kerjain-theme', 'dark');
     } else {
@@ -112,7 +118,6 @@
 </script>
 
 <div class="page">
-  <!-- Header Navbar -->
   <header class="site-header">
     <div class="shell header-row">
       <a href="/" class="brand">
@@ -126,22 +131,17 @@
       </a>
 
       <nav class="site-nav">
-        <!-- Tombol Toggle Tema -->
-        <button class="theme-toggle" onclick={toggleTheme} aria-label="Toggle Dark Mode">
-          {#if isDarkMode}
-            ☀️
-          {:else}
-            🌙
-          {/if}
-        </button>             
-          <a href="/register" class="btn-primary-header hover:no-underline hover:text-white">
+       <a 
+        href="/register" 
+        class="btn-primary-header hover:no-underline hover:text-white"
+        data-sveltekit-preload-data="off"
+      >
         <span class="plus-icon">+</span> Buka Lowongan / Cari Pekerjaan
-         </a>
-     </nav>
+      </a>
+      </nav>
     </div>
   </header>
 
-  <!-- Hero Section -->
   <section class="hero-section">
     <div class="shell hero-container">
       <div class="hero-content">
@@ -161,7 +161,7 @@
           <input 
             type="text" 
             placeholder="Cari Foto, Excel, Desain..." 
-            bind:value={searchQuery}
+            bind:value={$searchQuery}
           />
           <button class="btn-search" type="submit">Cari Tugas</button>
         </form>
@@ -170,7 +170,7 @@
       <div class="hero-stats-panel">
         <div class="stats-divider"></div>
         <div class="stats-body">
-          <div class="stat-number">{formatNumber(openJobTotal)}</div>
+          <div class="stat-number">{formatNumber($openJobTotal)}</div>
           <p class="stat-label">tugas siap <br />dikerjakan</p>
           <div class="quote-box">
             <p class="quote-text">“Peluang pertama bisa dimulai dari jarak terdekat.”</p>
@@ -184,46 +184,44 @@
     </div>
   </section>
 
-  <!-- Content / Task Listings -->
   <main class="main-content">
     <div class="shell">
       <div class="section-label">PELUANG TERBARU</div>
       
       <div class="tasks-header">
         <h2 class="section-title">Tugas di sekitarmu</h2>
-        <span class="task-count">{total} tugas tersedia</span>
+        <span class="task-count">{$total} tugas tersedia</span>
       </div>
 
-      <!-- Category Filter Tabs -->
       <div class="category-tabs">
         <button 
-          class="tab-btn {selectedSlug === 'all' ? 'active' : ''}" 
+          class="tab-btn {$selectedSlug === 'all' ? 'active' : ''}" 
           onclick={() => selectCategory('all')}
         >
           Semua
         </button>
-        {#each visibleCategories as cat}
+        {#each $visibleCategories as cat}
           <button 
-            class="tab-btn {selectedSlug === cat.slug ? 'active' : ''}" 
+            class="tab-btn {$selectedSlug === cat.slug ? 'active' : ''}" 
             onclick={() => selectCategory(cat.slug)}
           >
             {cat.name}
           </button>
         {/each}
 
-        {#if hiddenCategories.length > 0}
+        {#if $hiddenCategories.length > 0}
           <div class="category-dropdown-wrap">
             <select
               class="category-select"
-              bind:value={categorySelectValue}
+              bind:value={$categorySelectValue}
               onchange={() => {
-                if (categorySelectValue) {
-                  selectCategory(categorySelectValue);
+                if ($categorySelectValue) {
+                  selectCategory($categorySelectValue);
                 }
               }}
             >
               <option value="">Kategori Lainnya ▾</option>
-              {#each hiddenCategories as cat}
+              {#each $hiddenCategories as cat}
                 <option value={cat.slug}>{cat.name}</option>
               {/each}
             </select>
@@ -231,24 +229,23 @@
         {/if}
       </div>
 
-      {#if loading}
+      {#if $loading}
         <div class="loading-state">
           <div class="spinner"></div>
           <p>Memuat tugas...</p>
         </div>
-      {:else if loadError}
+      {:else if $loadError}
         <div class="error-state">
-          <p>{loadError}</p>
+          <p>{$loadError}</p>
           <button class="btn-action" onclick={loadJobs}>Coba Lagi</button>
         </div>
-      {:else if jobs.length === 0}
+      {:else if $jobs.length === 0}
         <div class="empty-state">
           <p>Belum ada tugas yang cocok.</p>
         </div>
       {:else}
-        <!-- Task Cards Grid -->
         <div class="tasks-grid">
-          {#each jobs as task (task.id)}
+          {#each $jobs as task (task.id)}
             <div class="task-card">
               <div class="card-header">
                 <span class="badge-cat">{task.category?.name ?? 'Tugas Mikro'}</span>
@@ -298,19 +295,19 @@
           {/each}
         </div>
 
-        {#if lastPage > 1}
+        {#if $lastPage > 1}
           <div class="pagination-container">
-            <span class="pagination-info">Halaman {page} dari {lastPage} · {total} tugas tersedia</span>
+            <span class="pagination-info">Halaman {$page} dari {$lastPage} · {$total} tugas tersedia</span>
             <div class="pagination-buttons">
-              <button class="btn-page" onclick={() => goToPage(page - 1)} disabled={page <= 1}>←</button>
-              {#each pages as p}
+              <button class="btn-page" onclick={() => goToPage($page - 1)} disabled={$page <= 1}>←</button>
+              {#each $pages as p}
                 {#if p === '...'}
                   <span class="btn-page dots">…</span>
                 {:else}
-                  <button class="btn-page {page === p ? 'active-page' : ''}" onclick={() => goToPage(p)}>{p}</button>
+                  <button class="btn-page {$page === p ? 'active-page' : ''}" onclick={() => goToPage(p)}>{p}</button>
                 {/if}
               {/each}
-              <button class="btn-page" onclick={() => goToPage(page + 1)} disabled={page >= lastPage}>→</button>
+              <button class="btn-page" onclick={() => goToPage($page + 1)} disabled={$page >= $lastPage}>→</button>
             </div>
           </div>
         {/if}
@@ -318,7 +315,6 @@
     </div>
   </main>
 
-  <!-- Footer -->
   <footer class="site-footer">
     <div class="shell footer-row">
       <div class="footer-brand-group">
@@ -333,6 +329,16 @@
       <p class="copyright">© 2026. Dibuat untuk UMKM dan talenta lokal</p>
     </div>
   </footer>
+
+  <button 
+    type="button" 
+    class="floating-theme-toggle {$isDarkMode ? 'is-dark' : ''}" 
+    onclick={toggleTheme} 
+    aria-label="Toggle Dark Mode"
+  >
+    <span class="icon sun">☀️</span>
+    <span class="icon moon">🌙</span>
+  </button>
 </div>
 
 <style>
@@ -426,7 +432,8 @@
     background-color: var(--bg-body);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
-    transition: background-color 0.3s, color 0.3s;
+    /* Transisi Halus Untuk Warna Background Global */
+    transition: background-color 0.4s ease, color 0.4s ease;
   }
 
   * {
@@ -446,7 +453,7 @@
     position: sticky;
     top: 0;
     z-index: 50;
-    transition: background-color 0.3s, border-color 0.3s;
+    transition: background-color 0.4s ease, border-color 0.4s ease;
   }
 
   .header-row {
@@ -471,7 +478,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #0d233a; /* Logo background remains steady */
+    background-color: #0d233a; 
     flex-shrink: 0;
   }
 
@@ -492,7 +499,7 @@
     letter-spacing: 0.02em;
     color: var(--brand-text);
     line-height: 1.1;
-    transition: color 0.3s;
+    transition: color 0.4s ease;
   }
 
   .brand-tagline {
@@ -504,32 +511,8 @@
   .site-nav {
     display: flex;
     align-items: center;
-    gap: 16px; /* Reduced gap slightly to fit button */
   }
   
-  @media (min-width: 768px) {
-    .site-nav { gap: 32px; }
-  }
-
-  .theme-toggle {
-    background: var(--tag-bg);
-    color: var(--text-primary);
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-    transition: all 0.2s;
-  }
-
-  .theme-toggle:hover {
-    background: var(--border-color);
-  }
-
   .btn-primary-header {
     display: inline-flex;
     align-items: center;
@@ -548,6 +531,71 @@
     background-color: var(--btn-primary-hover);
   }
 
+  /* ---------- Floating Theme Toggle (POJOK KANAN BAWAH) ---------- */
+  .floating-theme-toggle {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    /* Transisi untuk warna button & perbesar/mengecil */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+  }
+
+  @media (min-width: 768px) {
+    .floating-theme-toggle {
+      bottom: 32px;
+      right: 32px;
+      width: 56px;
+      height: 56px;
+    }
+  }
+
+  .floating-theme-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .floating-theme-toggle .icon {
+    position: absolute;
+    font-size: 24px;
+    /* Transisi Rotasi, Scale, dan Opacity untuk Icon */
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+  }
+
+  /* State: LIGHT MODE (Default) */
+  .floating-theme-toggle .sun {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+  .floating-theme-toggle .moon {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5); /* Sembunyi berputar ke kiri & mengecil */
+  }
+
+  /* State: DARK MODE */
+  .floating-theme-toggle.is-dark {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); /* Bayangan sedikit lebih pekat di dark mode */
+  }
+  .floating-theme-toggle.is-dark .sun {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5); /* Sembunyi berputar ke kanan & mengecil */
+  }
+  .floating-theme-toggle.is-dark .moon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1); /* Tampil dan menjadi ukuran normal */
+  }
+
   /* ---------- Hero Section ---------- */
   .hero-section {
     background-color: var(--hero-bg);
@@ -555,7 +603,7 @@
     padding: 72px 0 88px;
     position: relative;
     overflow: hidden;
-    transition: background-color 0.3s;
+    transition: background-color 0.4s ease;
   }
 
   .hero-container {
@@ -588,7 +636,7 @@
     line-height: 1.6;
     max-width: 520px;
     margin-bottom: 36px;
-    transition: color 0.3s;
+    transition: color 0.4s ease;
   }
 
   .search-box {
@@ -599,7 +647,7 @@
     align-items: center;
     max-width: 560px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-    transition: background-color 0.3s;
+    transition: background-color 0.4s ease;
   }
 
   .search-icon {
@@ -644,7 +692,7 @@
     width: 1px;
     height: 180px;
     background-color: var(--hero-divider);
-    transition: background-color 0.3s;
+    transition: background-color 0.4s ease;
   }
 
   .stat-number {
@@ -717,14 +765,14 @@
     font-weight: 800;
     color: var(--text-primary);
     margin: 0;
-    transition: color 0.3s;
+    transition: color 0.4s ease;
   }
 
   .task-count {
     color: var(--text-muted);
     font-size: 14px;
     font-weight: 500;
-    transition: color 0.3s;
+    transition: color 0.4s ease;
   }
 
   .category-tabs {
@@ -752,7 +800,7 @@
     font-weight: 700;
     cursor: pointer;
     white-space: nowrap;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
   }
 
   .tab-btn {
@@ -784,7 +832,7 @@
     padding: 48px 24px;
     text-align: center;
     color: var(--text-secondary);
-    transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+    transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
   }
 
   .spinner {
@@ -831,7 +879,7 @@
     display: flex;
     flex-direction: column;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s, border-color 0.3s;
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.4s ease, border-color 0.4s ease;
   }
 
   .task-card:hover {
@@ -853,7 +901,7 @@
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 6px;
-    transition: background-color 0.3s, color 0.3s;
+    transition: background-color 0.4s ease, color 0.4s ease;
   }
 
   .status-indicator {
@@ -878,7 +926,7 @@
     color: var(--text-primary);
     margin: 0 0 12px;
     line-height: 1.3;
-    transition: color 0.3s;
+    transition: color 0.4s ease;
   }
 
   .card-meta {
@@ -894,7 +942,7 @@
     gap: 6px;
     font-size: 13px;
     color: var(--text-muted);
-    transition: color 0.3s;
+    transition: color 0.4s ease;
   }
 
   .task-desc {
@@ -902,7 +950,7 @@
     color: var(--text-secondary);
     line-height: 1.5;
     margin: 0 0 16px;
-    transition: color 0.3s;
+    transition: color 0.4s ease;
   }
 
   .tags-container {
@@ -919,7 +967,7 @@
     font-weight: 600;
     padding: 4px 10px;
     border-radius: 6px;
-    transition: background-color 0.3s, color 0.3s;
+    transition: background-color 0.4s ease, color 0.4s ease;
   }
 
   .card-footer {
@@ -929,7 +977,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    transition: border-color 0.3s;
+    transition: border-color 0.4s ease;
   }
 
   .reward-label {
@@ -939,7 +987,7 @@
     color: var(--text-muted);
     letter-spacing: 0.05em;
     margin-bottom: 2px;
-    transition: color 0.3s;
+    transition: color 0.4s ease;
   }
 
   .reward-value {
@@ -949,7 +997,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: color 0.3s;
+    transition: color 0.4s ease;
   }
 
   .duration-label {
@@ -959,7 +1007,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    transition: color 0.3s;
+    transition: color 0.4s ease;
   }
 
   .btn-action {
@@ -1002,7 +1050,7 @@
   .pagination-info {
     font-size: 12px;
     color: var(--text-muted);
-    transition: color 0.3s;
+    transition: color 0.4s ease;
   }
 
   .pagination-buttons {
@@ -1052,7 +1100,7 @@
     border-top: 1px solid var(--footer-border);
     padding: 32px 0;
     color: #94a3b8;
-    transition: background-color 0.3s, border-color 0.3s;
+    transition: background-color 0.4s ease, border-color 0.4s ease;
   }
 
   .footer-row {
