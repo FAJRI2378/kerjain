@@ -46,26 +46,26 @@
   }
 </script>
 
-<div class="p-6 md:p-10 space-y-6 font-sans max-w-4xl">
+<div class="admin-settings-page p-6 md:p-10 space-y-6 font-sans max-w-4xl">
   <!-- Header -->
-  <div class="border-b border-slate-800/80 pb-6">
-    <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight">Pengaturan Sistem</h1>
-    <p class="text-xs md:text-sm text-slate-400">Konfigurasi parameter platform, komisi, dan kebijakan aturan bisnis.</p>
+  <div class="border-b border-slate-800/80 pb-6 settings-header">
+    <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight settings-title">Pengaturan Sistem</h1>
+    <p class="text-xs md:text-sm text-slate-400 settings-sub">Konfigurasi parameter platform, komisi, dan kebijakan aturan bisnis.</p>
   </div>
 
   <form onsubmit={handleSaveSettings} class="space-y-6">
     {#if loading}
-      <p class="text-xs text-slate-500 p-4 bg-slate-900/60 border border-slate-800 rounded-xl">Memuat pengaturan...</p>
+      <p class="text-xs text-slate-500 p-4 bg-slate-900/60 border border-slate-800 rounded-xl loading-box">Memuat pengaturan...</p>
     {/if}
     <!-- Section 1: Monetisasi & Komisi -->
-    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl space-y-4">
-      <h3 class="font-bold text-white text-sm flex items-center gap-2">
+    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl space-y-4 settings-card">
+      <h3 class="font-bold text-white text-sm flex items-center gap-2 section-title">
         <span>💰</span> Skema Komisi & Keuangan
       </h3>
       
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
         <div>
-          <label for="commission" class="block font-medium text-slate-300 mb-1.5">Potongan Komisi Platform (%)</label>
+          <label for="commission" class="block font-medium text-slate-300 mb-1.5 label-text">Potongan Komisi Platform (%)</label>
           <div class="relative">
             <input 
               id="commission"
@@ -73,7 +73,7 @@
               bind:value={platformCommission}
               min="0"
               max="50"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-purple-500 transition"
+              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-purple-500 transition commission-input"
             />
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">%</span>
           </div>
@@ -83,16 +83,16 @@
     </div>
 
     <!-- Section 2: Moderasi Automation -->
-    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl space-y-4">
-      <h3 class="font-bold text-white text-sm flex items-center gap-2">
+    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl space-y-4 settings-card">
+      <h3 class="font-bold text-white text-sm flex items-center gap-2 section-title">
         <span>⚙️</span> Otomatisasi Moderasi
       </h3>
 
       <div class="space-y-4 text-xs">
         <!-- Toggle Auto Approve -->
-        <div class="flex items-center justify-between p-3 bg-slate-950/60 rounded-xl border border-slate-800/60">
+        <div class="flex items-center justify-between p-3 bg-slate-950/60 rounded-xl border border-slate-800/60 toggle-box">
           <div>
-            <p class="font-bold text-white">Auto-Approve Postingan Tugas</p>
+            <p class="font-bold text-white toggle-title">Auto-Approve Postingan Tugas</p>
             <p class="text-[10px] text-slate-400">Jika aktif, tugas yang diposting UMKM langsung tayang tanpa review manual.</p>
           </div>
           <input 
@@ -103,10 +103,10 @@
         </div>
 
         <!-- Toggle Email Notification -->
-        <div class="flex items-center justify-between p-3 bg-slate-950/60 rounded-xl border border-slate-800/60">
+        <div class="flex items-center justify-between p-3 bg-slate-950/60 rounded-xl border border-slate-800/60 toggle-box">
           <div>
-            <p class="font-bold text-white">Notifikasi Email Admin</p>
-            <p class="text-[10px] text-slate-400">Kirim alert email setiap ada verifikasi KTP/ID pengguna baru.</p>
+            <p class="font-bold text-white toggle-title">Notifikasi Email Admin</p>
+            <p class="text-[10px] text-slate-400">Kirim alert email setiap ada verifikasi pengguna baru.</p>
           </div>
           <input 
             type="checkbox" 
@@ -118,14 +118,14 @@
     </div>
 
     <!-- Section 3: System Status / Maintenance -->
-    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl space-y-4">
+    <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl space-y-4 settings-card">
       <h3 class="font-bold text-rose-400 text-sm flex items-center gap-2">
         <span>⚠️</span> Maintenance System
       </h3>
 
-      <div class="flex items-center justify-between p-3 bg-slate-950/60 rounded-xl border border-slate-800/60">
+      <div class="flex items-center justify-between p-3 bg-slate-950/60 rounded-xl border border-slate-800/60 toggle-box">
         <div>
-          <p class="font-bold text-white">Aktifkan Maintenance Mode</p>
+          <p class="font-bold text-white toggle-title">Aktifkan Maintenance Mode</p>
           <p class="text-[10px] text-slate-400">Akses pengguna biasa akan dikunci sementara untuk pemeliharaan sistem.</p>
         </div>
         <input 
@@ -148,3 +148,58 @@
     </div>
   </form>
 </div>
+
+<style>
+  /* Light Theme Adjustments for Admin Settings Page */
+  :global(body:not(.dark-theme)) .admin-settings-page {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .settings-header {
+    border-color: #e2e8f0 !important;
+  }
+
+  :global(body:not(.dark-theme)) .settings-title {
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .settings-sub {
+    color: #64748b !important;
+  }
+
+  :global(body:not(.dark-theme)) .loading-box {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #475569 !important;
+  }
+
+  :global(body:not(.dark-theme)) .settings-card {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  :global(body:not(.dark-theme)) .section-title {
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .label-text {
+    color: #334155 !important;
+  }
+
+  :global(body:not(.dark-theme)) .commission-input {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .toggle-box {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  :global(body:not(.dark-theme)) .toggle-title {
+    color: #0f172a !important;
+  }
+</style>

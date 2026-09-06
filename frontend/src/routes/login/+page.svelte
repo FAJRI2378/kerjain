@@ -48,11 +48,8 @@
 
     <div class="brand-heading">
       <a href="/" class="brand">
-        <div class="brand-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="3" ry="3"></rect>
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-          </svg>
+        <div class="brand-logo-wrap">
+          <img src="/images/kerjain.webp" alt="Logo Kerjain" class="brand-img" />
         </div>
         <div class="brand-text">
           <span class="brand-name">KERJAIN</span>
@@ -238,20 +235,27 @@
   .brand {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     text-decoration: none;
     margin-bottom: 16px;
   }
 
-  .brand-icon {
-    width: 36px;
-    height: 36px;
-    background-color: #0d233a;
-    color: #10b981;
-    border-radius: 8px;
+  .brand-logo-wrap {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: #0d233a;
+    flex-shrink: 0;
+  }
+
+  .brand-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .brand-text {

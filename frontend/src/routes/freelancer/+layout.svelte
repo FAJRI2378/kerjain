@@ -138,11 +138,8 @@
   <!-- Mobile Top Bar -->
   <header class="mobile-header">
     <a href="/freelancer/dashboard" class="brand">
-      <div class="brand-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="7" width="20" height="14" rx="3" ry="3"></rect>
-          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-        </svg>
+      <div class="brand-logo-wrap">
+        <img src="/images/kerjain.webp" alt="Logo Kerjain" class="brand-img" />
       </div>
       <div class="brand-text">
         <span class="brand-name">KERJAIN</span>
@@ -162,11 +159,8 @@
     <div class="sidebar-top">
       <!-- Logo Brand -->
       <a href="/freelancer/dashboard" class="brand brand-desktop">
-        <div class="brand-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="3" ry="3"></rect>
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-          </svg>
+        <div class="brand-logo-wrap">
+          <img src="/images/kerjain.webp" alt="Logo Kerjain" class="brand-img" />
         </div>
         <div class="brand-text">
           <span class="brand-name">KERJAIN</span>
@@ -358,7 +352,6 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    /* Transisi agar perpindahan mode terang/gelap halus */
     transition: background-color 0.3s ease;
   }
 
@@ -369,26 +362,23 @@
   }
 
   /* ---------------- DARK THEME RULES ---------------- */
-  /* Aturan CSS global jika body memiliki class .dark-theme */
   :global(body.dark-theme) {
-    background-color: #0f172a !important; /* Warna latar utama gelap (Slate 900) */
-    color: #f8fafc !important; /* Warna teks utama terang */
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
   }
 
   :global(body.dark-theme .layout-container) {
     background-color: transparent !important;
   }
 
-  /* Elemen-elemen kontainer (Sidebar, Header Mobile, Card Modal, dll) */
   :global(body.dark-theme .sidebar), 
   :global(body.dark-theme .mobile-header),
   :global(body.dark-theme .modal-card),
   :global(body.dark-theme .profile-avatar-section) {
-    background-color: #1e293b !important; /* Slate 800 */
-    border-color: #334155 !important; /* Slate 700 */
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
   }
 
-  /* Teks Utama (Heading, Nama Brand) */
   :global(body.dark-theme .brand-name),
   :global(body.dark-theme .modal-title),
   :global(body.dark-theme .column-title),
@@ -397,38 +387,35 @@
     color: #ffffff !important;
   }
 
-  /* Teks Subtitle */
   :global(body.dark-theme .brand-sub),
   :global(body.dark-theme .modal-sub),
   :global(body.dark-theme .page-sub),
   :global(body.dark-theme .opt),
   :global(body.dark-theme .avatar-tip) {
-    color: #94a3b8 !important; /* Slate 400 */
+    color: #94a3b8 !important;
   }
 
-  /* Item Navigasi */
   :global(body.dark-theme .nav-item) {
-    color: #cbd5e1 !important; /* Slate 300 */
+    color: #cbd5e1 !important;
   }
   :global(body.dark-theme .nav-item:hover) {
-    background-color: #334155 !important; /* Slate 700 */
+    background-color: #334155 !important;
     color: #ffffff !important;
   }
   :global(body.dark-theme .nav-item.active) {
     background-color: rgba(21, 128, 61, 0.2) !important;
-    color: #4ade80 !important; /* Green 400 */
+    color: #4ade80 !important;
   }
   :global(body.dark-theme .nav-section-label) {
-    color: #64748b !important; /* Slate 500 */
+    color: #64748b !important;
   }
 
-  /* Card Profil & Input */
   :global(body.dark-theme .user-card-btn) {
-    background-color: #0f172a !important; /* Slate 900 */
+    background-color: #0f172a !important;
     border-color: #334155 !important;
   }
   :global(body.dark-theme .user-card-btn:hover) {
-    background-color: #1e293b !important; /* Slate 800 */
+    background-color: #1e293b !important;
   }
   :global(body.dark-theme .form-input) {
     background-color: #0f172a !important;
@@ -442,7 +429,6 @@
     color: #cbd5e1 !important;
   }
 
-  /* Tombol-tombol di mode gelap */
   :global(body.dark-theme .btn-cancel),
   :global(body.dark-theme .btn-change-avatar),
   :global(body.dark-theme .btn-toggle-menu) {
@@ -456,12 +442,11 @@
     color: #cbd5e1 !important;
   }
   :global(body.dark-theme .btn-logout:hover) {
-    background-color: #450a0a !important; /* Red 950 */
-    color: #fca5a5 !important; /* Red 300 */
+    background-color: #450a0a !important;
+    color: #fca5a5 !important;
     border-color: #7f1d1d !important;
   }
   
-  /* Untuk halaman-halaman yang dirender di dalam main */
   :global(body.dark-theme .page-header),
   :global(body.dark-theme .card),
   :global(body.dark-theme .task-card),
@@ -519,16 +504,22 @@
     text-decoration: none;
   }
 
-  .brand-icon {
-    width: 36px;
-    height: 36px;
-    background-color: #0d233a;
-    color: #10b981;
-    border-radius: 8px;
+  .brand-logo-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: #0d233a;
     flex-shrink: 0;
+  }
+
+  .brand-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .brand-text {
@@ -666,7 +657,6 @@
     background: #f1f5f9;
     color: #0f172a;
   }
-  /* Style spesifik saat mode gelap aktif */
   :global(body.dark-theme .btn-theme-toggle) {
     border-color: #475569;
     color: #94a3b8;

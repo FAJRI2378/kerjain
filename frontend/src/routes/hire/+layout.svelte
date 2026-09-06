@@ -167,7 +167,9 @@
   <!-- Mobile Top Bar -->
   <header class="mobile-header">
     <a href="/hire/dashboard" class="brand">
-      <div class="brand-icon">K</div>
+      <div class="brand-logo-wrap">
+        <img src="/images/kerjain.webp" alt="Logo Kerjain" class="brand-img" />
+      </div>
       <div class="brand-text">
         <span class="brand-name">KERJAIN</span>
         <span class="brand-tag">HIRER</span>
@@ -186,7 +188,9 @@
     <div class="sidebar-top">
       <!-- Logo Brand -->
       <a href="/hire/dashboard" class="brand brand-desktop">
-        <div class="brand-icon">K</div>
+        <div class="brand-logo-wrap">
+          <img src="/images/kerjain.webp" alt="Logo Kerjain" class="brand-img" />
+        </div>
         <div class="brand-text">
           <span class="brand-name">KERJAIN<span class="dot">.</span></span>
           <span class="brand-sub">BUSINESS & HIRER</span>
@@ -510,18 +514,22 @@
     text-decoration: none;
   }
 
-  .brand-icon {
-    width: 36px;
-    height: 36px;
-    background-color: #15803d;
-    color: #ffffff;
-    font-weight: 900;
+  .brand-logo-wrap {
+    width: 42px;
+    height: 42px;
     border-radius: 10px;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: #0d233a;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
+  }
+
+  .brand-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .brand-text {

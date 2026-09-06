@@ -67,11 +67,8 @@
   <header class="site-header">
     <div class="shell header-row">
       <a href="/" class="brand">
-        <div class="brand-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="3" ry="3"></rect>
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-          </svg>
+        <div class="brand-logo-wrap">
+          <img src="/images/kerjain.webp" alt="Logo Kerjain" class="brand-img" />
         </div>
         <div class="brand-text">
           <span class="brand-name">KERJAIN</span>
@@ -91,8 +88,6 @@
   <section class="hero-section">
     <div class="shell hero-container">
       <div class="hero-content">
-        
-        
         <h1 class="hero-title">
           Temukan kerja yang dekat dengan <span class="highlight-text">keahlianmu.</span>
         </h1>
@@ -209,11 +204,17 @@
   </main>
 
   <!-- Footer -->
+<!-- Footer -->
   <footer class="site-footer">
     <div class="shell footer-row">
-      <div>
-        <span class="footer-brand">KERJAIN</span>
-        <p class="footer-sub">Platform kerja mikro untuk Indonesia</p>
+      <div class="footer-brand-group">
+        <div class="footer-logo-wrap">
+          <img src="/images/kerjain.webp" alt="Logo Kerjain" class="footer-logo-img" />
+        </div>
+        <div>
+          <span class="footer-brand">KERJAIN</span>
+          <p class="footer-sub">Platform kerja mikro untuk Indonesia</p>
+        </div>
       </div>
       <p class="copyright">© 2026. Dibuat untuk UMKM dan talenta lokal</p>
     </div>
@@ -240,6 +241,66 @@
     padding: 0 24px;
   }
 
+  /* ---------- Footer Styles ---------- */
+  .site-footer {
+    background-color: #0d233a;
+    border-top: 1px solid #1e293b;
+    padding: 36px 0;
+    color: #94a3b8;
+  }
+
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-brand-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .footer-logo-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1e293b;
+    flex-shrink: 0;
+  }
+
+  .footer-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .footer-brand {
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.05em;
+    font-size: 15px;
+  }
+
+  .footer-sub {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .copyright {
+    margin: 0;
+    font-size: 12.5px;
+    color: #64748b;
+  }
+
   /* ---------- Header ---------- */
   .site-header {
     background: #ffffff;
@@ -263,15 +324,22 @@
     text-decoration: none;
   }
 
-  .brand-icon {
-    width: 40px;
-    height: 40px;
-    background-color: #0d233a;
-    color: #10b981;
-    border-radius: 10px;
+  .brand-logo-wrap {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: #0d233a;
+    flex-shrink: 0;
+  }
+
+  .brand-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Agar logo tidak terpotong */
   }
 
   .brand-text {
@@ -297,20 +365,6 @@
     display: flex;
     align-items: center;
     gap: 32px;
-  }
-
-  .nav-link {
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 600;
-    color: #64748b;
-    padding-bottom: 4px;
-    transition: color 0.2s;
-  }
-
-  .nav-link.active {
-    color: #0d233a;
-    border-bottom: 2px solid #10b981;
   }
 
   .btn-primary-header {
@@ -350,17 +404,6 @@
     .hero-container {
       grid-template-columns: 1.4fr 0.8fr;
     }
-  }
-
-  .hero-badge {
-    color: #bef264;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
   }
 
   .hero-title {
@@ -480,12 +523,6 @@
     font-weight: 600;
   }
 
-  .sdg-badge {
-    margin-left: auto;
-    color: #64748b;
-    font-weight: 700;
-  }
-
   /* ---------- Main Content ---------- */
   .main-content {
     padding: 48px 0 80px;
@@ -582,7 +619,6 @@
   }
 
   .badge-cat {
-    background-color: #dc262615;
     background: #dcfce7;
     color: #166534;
     font-size: 12px;

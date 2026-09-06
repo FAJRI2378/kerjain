@@ -22,11 +22,11 @@
   let unreadMessageCount = $state(2);
   
   const levelTiers = [
-    { id: 'Bronze Worker', xp: '0 - 999', icon: '🥉', reward: 'Akses ke tugas dasar UMKM.' },
-    { id: 'Silver Worker', xp: '1.000 - 1.999', icon: '🥈', reward: 'Potongan biaya admin platform sebesar 5%.' },
-    { id: 'Gold Worker', xp: '2.000 - 2.999', icon: '🥇', reward: 'Prioritas rekomendasi AI & potongan admin 10%.' },
-    { id: 'Platinum', xp: '3.000 - 4.999', icon: '💎', reward: 'Akses tugas VIP UMKM & pencairan dana instan.' },
-    { id: 'Diamond', xp: '5.000+', icon: '👑', reward: 'Bebas biaya admin (0%) & Merchandise Eksklusif Kerjain.' }
+    { id: 'Bronze Worker', xp: '0 - 999', icon: '🥉' },
+    { id: 'Silver Worker', xp: '1.000 - 1.999', icon: '🥈' },
+    { id: 'Gold Worker', xp: '2.000 - 2.999', icon: '🥇' },
+    { id: 'Platinum', xp: '3.000 - 4.999', icon: '💎' },
+    { id: 'Diamond', xp: '5.000+', icon: '👑' }
   ];
 
   // AI Recommended Jobs (Dummy)
@@ -178,7 +178,7 @@
                 <h4 class="tier-name">{tier.id}</h4>
                 <span class="tier-xp">{tier.xp} XP</span>
               </div>
-              <p class="tier-reward">🎁 <strong>Reward:</strong> {tier.reward}</p>
+              <p class="tier-reward">{tier.reward}</p>
             </div>
             {#if tier.id === currentLevel}
               <div class="current-badge">Kamu di sini</div>

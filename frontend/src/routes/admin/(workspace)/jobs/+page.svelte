@@ -56,14 +56,14 @@
   }
 </script>
 
-<div class="p-6 md:p-10 space-y-6 font-sans">
+<div class="admin-jobs-page p-6 md:p-10 space-y-6 font-sans">
   <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6 jobs-header">
     <div>
-      <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight">Management Jobs & Tugas</h1>
+      <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight jobs-title">Management Jobs & Tugas</h1>
       <p class="text-xs md:text-sm text-slate-400">Moderasi dan tinjau semua postingan tugas dari pemberi kerja.</p>
     </div>
-    <div class="text-xs font-semibold text-slate-400 bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl">
+    <div class="text-xs font-semibold text-slate-400 bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl total-badge">
       Total Tugas: <span class="text-purple-400 font-bold">{total}</span>
     </div>
   </div>
@@ -74,11 +74,11 @@
       type="text" 
       placeholder="Cari judul tugas atau nama UMKM..." 
       bind:value={searchQuery}
-      class="w-full sm:w-80 px-4 py-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+      class="w-full sm:w-80 px-4 py-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition search-input"
     />
 
     <!-- Filter Buttons -->
-    <div class="flex gap-1.5 bg-slate-900/80 p-1 border border-slate-800 rounded-xl text-xs w-full sm:w-auto overflow-x-auto">
+    <div class="flex gap-1.5 bg-slate-900/80 p-1 border border-slate-800 rounded-xl text-xs w-full sm:w-auto overflow-x-auto filter-group">
       <button 
         onclick={() => selectedFilter = 'all'} 
         class={`px-3 py-1.5 rounded-lg transition ${selectedFilter === 'all' ? 'bg-purple-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
@@ -107,11 +107,11 @@
   </div>
 
   <!-- Job List Table -->
-  <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-xl">
+  <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-xl table-container-box">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs border-collapse">
         <thead>
-          <tr class="border-b border-slate-800 bg-slate-950/50 text-slate-400 uppercase font-bold tracking-wider">
+          <tr class="border-b border-slate-800 bg-slate-950/50 text-slate-400 uppercase font-bold tracking-wider table-head-row">
             <th class="p-4">ID & Judul</th>
             <th class="p-4">Pembuat</th>
             <th class="p-4">Kategori & Fee</th>
@@ -119,20 +119,20 @@
             <th class="p-4 text-right">Aksi</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-800/60 text-slate-300">
+        <tbody class="divide-y divide-slate-800/60 text-slate-300 table-body">
           {#if loading}
             <tr><td colspan="5" class="p-8 text-center text-slate-500">Memuat data...</td></tr>
           {:else}
           {#each jobs as job (job.id)}
-            <tr class="hover:bg-slate-800/30 transition">
+            <tr class="hover:bg-slate-800/30 transition table-row-item">
               <td class="p-4 space-y-0.5">
                 <span class="font-mono text-[10px] text-purple-400">#{job.id}</span>
-                <p class="font-bold text-white text-sm">{job.title}</p>
+                <p class="font-bold text-white text-sm job-title">{job.title}</p>
                 {#if job.created_at}<p class="text-[10px] text-slate-500">Tanggal: {new Date(job.created_at).toLocaleDateString('id-ID')}</p>{/if}
               </td>
-              <td class="p-4 font-medium text-slate-200">{job.owner?.name ?? '-'}</td>
+              <td class="p-4 font-medium text-slate-200 job-owner-name">{job.owner?.name ?? '-'}</td>
               <td class="p-4 space-y-0.5">
-                <span class="px-2 py-0.5 bg-slate-800 text-slate-300 rounded text-[10px] font-semibold">{job.category?.name ?? '-'}</span>
+                <span class="px-2 py-0.5 bg-slate-800 text-slate-300 rounded text-[10px] font-semibold category-badge">{job.category?.name ?? '-'}</span>
                 <p class="font-bold text-emerald-400 mt-1">{formatRupiah(job.budget)}</p>
               </td>
               <td class="p-4">
@@ -169,3 +169,74 @@
     </div>
   </div>
 </div>
+
+<style>
+  /* Light Theme Adjustments for Admin Jobs Page */
+  :global(body:not(.dark-theme)) .admin-jobs-page {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .jobs-header {
+    border-color: #e2e8f0 !important;
+  }
+
+  :global(body:not(.dark-theme)) .jobs-title {
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .total-badge {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #334155 !important;
+  }
+
+  :global(body:not(.dark-theme)) .search-input {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .search-input::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  :global(body:not(.dark-theme)) .filter-group {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  :global(body:not(.dark-theme)) .table-container-box {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  :global(body:not(.dark-theme)) .table-head-row {
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+    color: #475569 !important;
+  }
+
+  :global(body:not(.dark-theme)) .table-body {
+    border-color: #e2e8f0 !important;
+  }
+
+  :global(body:not(.dark-theme)) .table-row-item:hover {
+    background-color: #f8fafc !important;
+  }
+
+  :global(body:not(.dark-theme)) .job-title {
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .job-owner-name {
+    color: #334155 !important;
+  }
+
+  :global(body:not(.dark-theme)) .category-badge {
+    background-color: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+  }
+</style>

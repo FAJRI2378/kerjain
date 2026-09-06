@@ -49,7 +49,9 @@
     </div>
 
     <div class="text-center space-y-2">
-      <div class="w-12 h-12 mx-auto rounded-2xl bg-purple-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-purple-500/30">K</div>
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center overflow-hidden shadow-lg shadow-purple-500/20">
+        <img src="/images/kerjain.webp" alt="Logo Kerjain" class="w-full h-full object-cover" />
+      </div>
       <h1 class="text-2xl font-black tracking-tight text-white">Admin Workspace</h1>
       <p class="text-xs font-mono uppercase tracking-widest text-purple-400 font-bold">KERJAIN Portal Master</p>
     </div>
