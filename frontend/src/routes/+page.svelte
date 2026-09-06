@@ -2,13 +2,11 @@
   import { onMount } from 'svelte';
   import { writable, derived } from 'svelte/store';
   import { api } from '$lib/api/client.js';
-  import { theme } from '$lib/stores/theme.js';
   import { formatRupiah, formatNumber } from '$lib/format.js';
 
   const PER_PAGE = 6;
   const VISIBLE_CHIPS = 8;
 
-  // Konversi $state menjadi writable store
   let searchQuery = writable("");
   let activeSearch = writable("");
   let selectedSlug = writable("all");
@@ -22,7 +20,6 @@
   let loadError = writable(null);
   let categorySelectValue = writable("");
 
-  // Konversi $derived menjadi derived store
   let visibleCategories = derived(categories, $c => $c.slice(0, VISIBLE_CHIPS));
   let hiddenCategories = derived(categories, $c => $c.slice(VISIBLE_CHIPS));
 
@@ -92,11 +89,10 @@
     $page = p;
     loadJobs();
   }
-onMount(() => {
-    theme.init();
+
+  onMount(() => {
     Promise.all([loadCategories(), loadJobs()]).catch(() => {});
   });
-
 </script>
 
 <div class="page">
@@ -113,13 +109,13 @@ onMount(() => {
       </a>
 
       <nav class="site-nav">
-      <a 
-  href="/register" 
-  class="btn-primary-header hover:no-underline hover:text-white"
-  data-sveltekit-preload-data="off"
->
-  <span class="plus-icon">+</span> Buka Lowongan / Cari Pekerjaan
-</a>
+        <a 
+          href="/register" 
+          class="btn-primary-header hover:no-underline hover:text-white"
+          data-sveltekit-preload-data="off"
+        >
+          <span class="plus-icon">+</span> Buka Lowongan / Cari Pekerjaan
+        </a>
       </nav>
     </div>
   </header>
@@ -311,20 +307,9 @@ onMount(() => {
       <p class="copyright">© 2026. Dibuat untuk UMKM dan talenta lokal</p>
     </div>
   </footer>
-
-<button 
-  type="button" 
-  class="floating-theme-toggle {$theme ? 'is-dark' : ''}" 
-  onclick={() => theme.toggle()} 
-  aria-label="Toggle Dark Mode"
->
-  <span class="icon sun">☀️</span>
-  <span class="icon moon">🌙</span>
-</button>
 </div>
 
 <style>
-  /* ================= CSS VARIABLES & THEMING ================= */
   :global(:root) {
     --bg-body: #f8fafc;
     --text-primary: #0f172a;
@@ -365,49 +350,6 @@ onMount(() => {
     --brand-text: #0d233a;
   }
 
-  /* Dark Mode Overrides */
-/* Dark Mode Overrides yang Dipaksa Putih & Kontras */
-  :global(body.dark-theme) {
-    --bg-body: #0f172a;
-    --text-primary: #ffffff;      /* Dipaksa putih bersih */
-    --text-secondary: #f1f5f9;    /* Dipaksa putih hampir terang */
-    --text-muted: #cbd5e1;        /* Diubah jadi abu-abu terang agar tetap terbaca */
-
-    --bg-surface: #1e293b;
-    --border-color: #334155;
-
-    --btn-primary-bg: #10b981;
-    --btn-primary-text: #0f172a;
-    --btn-primary-hover: #059669;
-
-    --btn-action-bg: #d9f99d;
-    --btn-action-text: #0f172a;
-    --btn-action-hover: #bef264;
-
-    --hero-bg: #09131f;
-    --hero-text: #ffffff;
-    --hero-subtitle: #e2e8f0;     /* Dipaksa terang */
-    --hero-divider: rgba(255, 255, 255, 0.1);
-    
-    --search-icon: #e2e8f0;
-
-    --tab-bg: #1e293b;
-    --tab-text: #ffffff;          /* Text tab kategori jadi putih */
-    --tab-active-bg: #d9f99d;
-    --tab-active-text: #0f172a;
-
-    --badge-cat-bg: rgba(34, 197, 94, 0.2);
-    --badge-cat-text: #4ade80;
-    --tag-bg: #334155;
-    --tag-text: #ffffff;          /* Tag/pill jadi putih */
-
-    --footer-bg: #09131f;
-    --footer-border: #1e293b;
-    
-    --brand-text: #ffffff;        /* Tulisan brand KERJAIN jadi putih */
-  }
-
-  /* ================= GLOBAL STYLES ================= */
   :global(body) {
     margin: 0;
     padding: 0;
@@ -415,8 +357,6 @@ onMount(() => {
     background-color: var(--bg-body);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
-    /* Transisi Halus Untuk Warna Background Global */
-    transition: background-color 0.4s ease, color 0.4s ease;
   }
 
   * {
@@ -429,14 +369,12 @@ onMount(() => {
     padding: 0 24px;
   }
 
-  /* ---------- Header ---------- */
   .site-header {
     background: var(--bg-surface);
     border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 50;
-    transition: background-color 0.4s ease, border-color 0.4s ease;
   }
 
   .header-row {
@@ -482,7 +420,6 @@ onMount(() => {
     letter-spacing: 0.02em;
     color: var(--brand-text);
     line-height: 1.1;
-    transition: color 0.4s ease;
   }
 
   .brand-tagline {
@@ -514,79 +451,12 @@ onMount(() => {
     background-color: var(--btn-primary-hover);
   }
 
-  /* ---------- Floating Theme Toggle (POJOK KANAN BAWAH) ---------- */
-  .floating-theme-toggle {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    /* Transisi untuk warna button & perbesar/mengecil */
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-  }
-
-  @media (min-width: 768px) {
-    .floating-theme-toggle {
-      bottom: 32px;
-      right: 32px;
-      width: 56px;
-      height: 56px;
-    }
-  }
-
-  .floating-theme-toggle:hover {
-    transform: scale(1.1);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-  }
-
-  .floating-theme-toggle .icon {
-    position: absolute;
-    font-size: 24px;
-    /* Transisi Rotasi, Scale, dan Opacity untuk Icon */
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
-  }
-
-  /* State: LIGHT MODE (Default) */
-  .floating-theme-toggle .sun {
-    opacity: 1;
-    transform: rotate(0deg) scale(1);
-  }
-  .floating-theme-toggle .moon {
-    opacity: 0;
-    transform: rotate(-90deg) scale(0.5); /* Sembunyi berputar ke kiri & mengecil */
-  }
-
-  /* State: DARK MODE */
-  .floating-theme-toggle.is-dark {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); /* Bayangan sedikit lebih pekat di dark mode */
-  }
-  .floating-theme-toggle.is-dark .sun {
-    opacity: 0;
-    transform: rotate(90deg) scale(0.5); /* Sembunyi berputar ke kanan & mengecil */
-  }
-  .floating-theme-toggle.is-dark .moon {
-    opacity: 1;
-    transform: rotate(0deg) scale(1); /* Tampil dan menjadi ukuran normal */
-  }
-
-  /* ---------- Hero Section ---------- */
   .hero-section {
     background-color: var(--hero-bg);
     color: var(--hero-text);
     padding: 72px 0 88px;
     position: relative;
     overflow: hidden;
-    transition: background-color 0.4s ease;
   }
 
   .hero-container {
@@ -619,7 +489,6 @@ onMount(() => {
     line-height: 1.6;
     max-width: 520px;
     margin-bottom: 36px;
-    transition: color 0.4s ease;
   }
 
   .search-box {
@@ -630,7 +499,6 @@ onMount(() => {
     align-items: center;
     max-width: 560px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-    transition: background-color 0.4s ease;
   }
 
   .search-icon {
@@ -675,7 +543,6 @@ onMount(() => {
     width: 1px;
     height: 180px;
     background-color: var(--hero-divider);
-    transition: background-color 0.4s ease;
   }
 
   .stat-number {
@@ -723,7 +590,6 @@ onMount(() => {
     font-weight: 600;
   }
 
-  /* ---------- Main Content ---------- */
   .main-content {
     padding: 48px 0 80px;
   }
@@ -748,14 +614,12 @@ onMount(() => {
     font-weight: 800;
     color: var(--text-primary);
     margin: 0;
-    transition: color 0.4s ease;
   }
 
   .task-count {
     color: var(--text-muted);
     font-size: 14px;
     font-weight: 500;
-    transition: color 0.4s ease;
   }
 
   .category-tabs {
@@ -783,7 +647,6 @@ onMount(() => {
     font-weight: 700;
     cursor: pointer;
     white-space: nowrap;
-    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
   }
 
   .tab-btn {
@@ -805,7 +668,6 @@ onMount(() => {
     border-color: var(--tab-active-bg);
   }
 
-  /* ---------- Loading / Error / Empty States ---------- */
   .loading-state,
   .error-state,
   .empty-state {
@@ -815,7 +677,6 @@ onMount(() => {
     padding: 48px 24px;
     text-align: center;
     color: var(--text-secondary);
-    transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
   }
 
   .spinner {
@@ -841,7 +702,6 @@ onMount(() => {
     font-weight: 600;
   }
 
-  /* ---------- Tasks Grid & Cards ---------- */
   .tasks-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -862,7 +722,7 @@ onMount(() => {
     display: flex;
     flex-direction: column;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    transition: transform 0.2s, box-shadow 0.2s, background-color 0.4s ease, border-color 0.4s ease;
+    transition: transform 0.2s, box-shadow 0.2s;
   }
 
   .task-card:hover {
@@ -884,7 +744,6 @@ onMount(() => {
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 6px;
-    transition: background-color 0.4s ease, color 0.4s ease;
   }
 
   .status-indicator {
@@ -909,7 +768,6 @@ onMount(() => {
     color: var(--text-primary);
     margin: 0 0 12px;
     line-height: 1.3;
-    transition: color 0.4s ease;
   }
 
   .card-meta {
@@ -925,7 +783,6 @@ onMount(() => {
     gap: 6px;
     font-size: 13px;
     color: var(--text-muted);
-    transition: color 0.4s ease;
   }
 
   .task-desc {
@@ -933,7 +790,6 @@ onMount(() => {
     color: var(--text-secondary);
     line-height: 1.5;
     margin: 0 0 16px;
-    transition: color 0.4s ease;
   }
 
   .tags-container {
@@ -950,7 +806,6 @@ onMount(() => {
     font-weight: 600;
     padding: 4px 10px;
     border-radius: 6px;
-    transition: background-color 0.4s ease, color 0.4s ease;
   }
 
   .card-footer {
@@ -960,7 +815,6 @@ onMount(() => {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    transition: border-color 0.4s ease;
   }
 
   .reward-label {
@@ -970,7 +824,6 @@ onMount(() => {
     color: var(--text-muted);
     letter-spacing: 0.05em;
     margin-bottom: 2px;
-    transition: color 0.4s ease;
   }
 
   .reward-value {
@@ -980,7 +833,6 @@ onMount(() => {
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: color 0.4s ease;
   }
 
   .duration-label {
@@ -990,7 +842,6 @@ onMount(() => {
     display: flex;
     align-items: center;
     gap: 4px;
-    transition: color 0.4s ease;
   }
 
   .btn-action {
@@ -1013,7 +864,6 @@ onMount(() => {
     background-color: var(--btn-action-hover);
   }
 
-  /* ---------- Pagination ---------- */
   .pagination-container {
     display: flex;
     flex-direction: column;
@@ -1033,7 +883,6 @@ onMount(() => {
   .pagination-info {
     font-size: 12px;
     color: var(--text-muted);
-    transition: color 0.4s ease;
   }
 
   .pagination-buttons {
@@ -1077,13 +926,11 @@ onMount(() => {
     color: var(--text-muted);
   }
 
-  /* ---------- Footer ---------- */
   .site-footer {
     background-color: var(--footer-bg);
     border-top: 1px solid var(--footer-border);
     padding: 32px 0;
     color: #94a3b8;
-    transition: background-color 0.4s ease, border-color 0.4s ease;
   }
 
   .footer-row {
