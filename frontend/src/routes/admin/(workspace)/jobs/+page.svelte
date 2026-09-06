@@ -10,6 +10,12 @@
   let total = $state(0);
   let loading = $state(true);
 
+  // State untuk Modal Alasan Penolakan
+  let isRejectModalOpen = $state(false);
+  let targetJobId = $state(null);
+  let rejectionReason = $state('');
+  let isSubmitting = $state(false);
+
   async function load() {
     loading = true;
     try {
@@ -34,13 +40,44 @@
     return () => clearTimeout(t);
   });
 
-  async function updateStatus(id, newStatus) {
+  // Fungsi untuk menyetujui tugas
+  async function approveJob(id) {
     try {
-      await api.post(`/api/admin/tasks/${id}/${newStatus === 'approved' ? 'approve' : 'reject'}`, {});
-      toast(newStatus === 'approved' ? 'Tugas disetujui.' : 'Tugas ditolak.', 'success');
+      await api.post(`/api/admin/tasks/${id}/approve`, {});
+      toast('Tugas disetujui.', 'success');
       await load();
     } catch (err) {
-      toast(errorMessage(err, 'Gagal mengubah status.'), 'error');
+      toast(errorMessage(err, 'Gagal menyetujui tugas.'), 'error');
+    }
+  }
+
+  // Membuka modal penolakan
+  function openRejectModal(id) {
+    targetJobId = id;
+    rejectionReason = '';
+    isRejectModalOpen = true;
+  }
+
+  // Eksekusi penolakan dengan alasan
+  async function submitRejection(e) {
+    e.preventDefault();
+    if (!rejectionReason.trim()) {
+      toast('Alasan penolakan wajib diisi.', 'error');
+      return;
+    }
+
+    isSubmitting = true;
+    try {
+      await api.post(`/api/admin/tasks/${targetJobId}/reject`, {
+        reason: rejectionReason
+      });
+      toast('Tugas berhasil ditolak.', 'success');
+      isRejectModalOpen = false;
+      await load();
+    } catch (err) {
+      toast(errorMessage(err, 'Gagal menolak tugas.'), 'error');
+    } finally {
+      isSubmitting = false;
     }
   }
 
@@ -115,7 +152,7 @@
             <th class="p-4">ID & Judul</th>
             <th class="p-4">Pembuat</th>
             <th class="p-4">Kategori & Fee</th>
-            <th class="p-4">Status</th>
+            <th class="p-4">Status & Alasan</th>
             <th class="p-4 text-right">Aksi</th>
           </tr>
         </thead>
@@ -135,24 +172,29 @@
                 <span class="px-2 py-0.5 bg-slate-800 text-slate-300 rounded text-[10px] font-semibold category-badge">{job.category?.name ?? '-'}</span>
                 <p class="font-bold text-emerald-400 mt-1">{formatRupiah(job.budget)}</p>
               </td>
-              <td class="p-4">
+              <td class="p-4 space-y-1">
                 {#if job.status === 'pending'}
-                  <span class="px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg font-bold text-[10px]">Pending</span>
+                  <span class="inline-block px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg font-bold text-[10px]">Pending</span>
                 {:else if job.status === 'approved'}
-                  <span class="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg font-bold text-[10px]">Approved</span>
+                  <span class="inline-block px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg font-bold text-[10px]">Approved</span>
                 {:else if job.status === 'rejected'}
-                  <span class="px-2.5 py-1 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-bold text-[10px]">Rejected</span>
+                  <span class="inline-block px-2.5 py-1 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-bold text-[10px]">Rejected</span>
+                  {#if job.rejection_reason || job.reason}
+                    <p class="text-[11px] text-rose-400/90 italic mt-1 max-w-xs bg-rose-500/5 p-1.5 rounded border border-rose-500/10">
+                      Alasan: "{job.rejection_reason ?? job.reason}"
+                    </p>
+                  {/if}
                 {:else}
-                  <span class="px-2.5 py-1 bg-slate-500/10 border border-slate-500/20 text-slate-300 rounded-lg font-bold text-[10px]">{job.status}</span>
+                  <span class="inline-block px-2.5 py-1 bg-slate-500/10 border border-slate-500/20 text-slate-300 rounded-lg font-bold text-[10px]">{job.status}</span>
                 {/if}
               </td>
               <td class="p-4 text-right">
                 <div class="flex items-center justify-end gap-2">
                   {#if job.status === 'pending'}
-                    <button onclick={() => updateStatus(job.id, 'approved')} class="px-2.5 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold rounded-lg transition">Setujui</button>
-                    <button onclick={() => updateStatus(job.id, 'rejected')} class="px-2.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold rounded-lg transition">Tolak</button>
+                    <button onclick={() => approveJob(job.id)} class="px-2.5 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold rounded-lg transition">Setujui</button>
+                    <button onclick={() => openRejectModal(job.id)} class="px-2.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold rounded-lg transition">Tolak</button>
                   {/if}
-                  <button onclick={() => deleteJob(job.id)} class="p-1.5 hover:bg-rose-500/20 text-rose-400 rounded-lg transition">🗑️</button>
+                  <button onclick={() => deleteJob(job.id)} class="p-1.5 hover:bg-rose-500/20 text-rose-400 rounded-lg transition" title="Hapus Tugas">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -170,7 +212,73 @@
   </div>
 </div>
 
+<!-- Modal Alasan Penolakan -->
+{#if isRejectModalOpen}
+  <div class="modal-backdrop" onclick={() => isRejectModalOpen = false}>
+    <div class="modal-card" onclick={(e) => e.stopPropagation()}>
+      <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-white">Alasan Penolakan Tugas</h3>
+        <button onclick={() => isRejectModalOpen = false} class="text-slate-400 hover:text-white font-bold">✕</button>
+      </div>
+
+      <form onsubmit={submitRejection} class="space-y-4">
+        <div>
+          <label for="reason-input" class="block text-xs font-semibold text-slate-300 mb-2">Tuliskan alasan mengapa tugas ini ditolak:</label>
+          <textarea 
+            id="reason-input"
+            bind:value={rejectionReason} 
+            rows="3" 
+            placeholder="Contoh: Deskripsi kurang jelas atau melanggar ketentuan platform..."
+            class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 transition resize-none"
+            required
+          ></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button 
+            type="button" 
+            onclick={() => isRejectModalOpen = false} 
+            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition"
+          >
+            Batal
+          </button>
+          <button 
+            type="submit" 
+            disabled={isSubmitting}
+            class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition disabled:opacity-50"
+          >
+            {isSubmitting ? 'Memproses...' : 'Konfirmasi Tolak'}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{/if}
+
 <style>
+  /* Modal Backdrop Styling */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 100;
+  }
+
+  .modal-card {
+    background-color: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 440px;
+    padding: 20px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+
   /* Light Theme Adjustments for Admin Jobs Page */
   :global(body:not(.dark-theme)) .admin-jobs-page {
     background-color: #f8fafc !important;
@@ -238,5 +346,24 @@
     background-color: #f1f5f9 !important;
     border: 1px solid #cbd5e1 !important;
     color: #334155 !important;
+  }
+
+  :global(body:not(.dark-theme)) .modal-card {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  :global(body:not(.dark-theme)) .modal-card h3 {
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .modal-card label {
+    color: #334155 !important;
+  }
+
+  :global(body:not(.dark-theme)) .modal-card textarea {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
   }
 </style>

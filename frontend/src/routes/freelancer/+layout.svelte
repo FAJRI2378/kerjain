@@ -8,9 +8,12 @@
 
   let { children } = $props();
 
+  // --- MENU NAVIGASI DIPERBARUI ---
+  // Menambahkan menu "Status Lamaran" beserta simulasi notifikasi (badge)
   const navItems = [
     { name: 'Dashboard', path: '/freelancer/dashboard', icon: '📊' },
     { name: 'Cari Jobs', path: '/freelancer/jobs', icon: '🔍' },
+    { name: 'Status Lamaran', path: '/freelancer/applications', icon: '📩', badge: 2 }, // Menu Baru
     { name: 'Tugas Saya', path: '/freelancer/mytasks', icon: '📋' },
     { name: 'Chat UMKM', path: '/freelancer/chat', icon: '💬' },
     { name: 'Dompet', path: '/freelancer/wallet', icon: '💰' },
@@ -32,7 +35,7 @@
   let newPassword = $state('');
   let isSavingProfile = $state(false);
 
-  // Helper untuk membaca URL foto secara aman (jaga-jaga nama field di backend berbeda)
+  // Helper untuk membaca URL foto secara aman
   function getUserAvatar(userObj) {
     if (!userObj) return null;
     return userObj.avatar_url || userObj.avatar || userObj.profile_photo_url || userObj.photo_url || userObj.photo || null;
@@ -41,7 +44,7 @@
   onMount(() => {
     if (!auth.hydrated) auth.hydrate();
     
-    // Cek preferensi tema sebelumnya (jika ada di localStorage)
+    // Cek preferensi tema sebelumnya
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme === 'dark') {
@@ -73,7 +76,7 @@
         profileName = auth.user.name || '';
         profileEmail = auth.user.email || '';
         profilePhone = auth.user.phone || '';
-        // Set preview awal dengan foto dari server (jika ada)
+        // Set preview awal dengan foto dari server
         if (!avatarFile) {
           avatarPreview = getUserAvatar(auth.user) || '';
         }
@@ -106,7 +109,7 @@
       
       if (avatarFile) {
         formData.append('avatar', avatarFile);
-        formData.append('photo', avatarFile); // Kirim ganda jaga-jaga beda nama field di backend
+        formData.append('photo', avatarFile); 
       }
       
       if (newPassword) {
@@ -116,7 +119,6 @@
       if (auth.updateProfile) {
         const response = await auth.updateProfile(formData);
         
-        // Memaksa update preview jika ada data user baru dari respons
         if (response && response.user) {
            avatarPreview = getUserAvatar(response.user);
         }
@@ -125,7 +127,7 @@
       toast('Profil & foto berhasil diperbarui!', 'success');
       isProfileOpen = false;
       newPassword = '';
-      avatarFile = null; // Reset file setelah sukses
+      avatarFile = null; 
     } catch (err) {
       toast(errorMessage(err, 'Gagal memperbarui profil.'), 'error');
     } finally {
@@ -178,8 +180,15 @@
             onclick={() => isMobileMenuOpen = false}
             class="nav-item {isActive ? 'active' : ''}"
           >
-            <span class="nav-icon">{item.icon}</span>
-            <span class="nav-label">{item.name}</span>
+            <div class="nav-content-left">
+              <span class="nav-icon">{item.icon}</span>
+              <span class="nav-label">{item.name}</span>
+            </div>
+            
+            <!-- BADGE NOTIFIKASI -->
+            {#if item.badge}
+              <span class="nav-badge animate-pulse">{item.badge}</span>
+            {/if}
           </a>
         {/each}
       </nav>
@@ -602,10 +611,11 @@
     gap: 4px;
   }
 
+  /* Penyesuaian Flexbox untuk Badge */
   .nav-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between; /* Membuat badge di ujung kanan */
     padding: 10px 14px;
     border-radius: 8px;
     font-size: 13px;
@@ -613,6 +623,31 @@
     color: #64748b;
     text-decoration: none;
     transition: all 0.2s;
+  }
+
+  .nav-content-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .nav-badge {
+    background-color: #ef4444; /* Merah untuk Notifikasi */
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 999px;
+  }
+
+  /* Animasi pulse untuk notifikasi baru */
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
   }
 
   .nav-item:hover {

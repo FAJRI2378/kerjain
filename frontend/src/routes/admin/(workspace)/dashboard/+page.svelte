@@ -15,6 +15,11 @@
   let loading = $state(true);
   let actingId = $state(null);
 
+  // State untuk Modal Alasan Penolakan
+  let isRejectModalOpen = $state(false);
+  let targetJobId = $state(null);
+  let rejectionReason = $state('');
+
   async function load() {
     loading = true;
     try {
@@ -50,17 +55,36 @@
     }
   }
 
-  async function handleReject(id) {
-    actingId = id;
+  // Membuka modal alasan penolakan
+  function openRejectModal(id) {
+    targetJobId = id;
+    rejectionReason = '';
+    isRejectModalOpen = true;
+  }
+
+  // Eksekusi penolakan dengan mengirimkan alasan
+  async function submitReject(e) {
+    e.preventDefault();
+    if (!rejectionReason.trim()) {
+      toast('Alasan penolakan wajib diisi.', 'error');
+      return;
+    }
+
+    isRejectModalOpen = false;
+    actingId = targetJobId;
+
     try {
-      await api.post(`/api/admin/tasks/${id}/reject`, {});
-      pendingJobs = pendingJobs.filter((j) => j.id !== id);
-      toast('Postingan ditolak.', 'info');
+      await api.post(`/api/admin/tasks/${targetJobId}/reject`, {
+        reason: rejectionReason
+      });
+      pendingJobs = pendingJobs.filter((j) => j.id !== targetJobId);
+      toast('Postingan ditolak dengan alasan.', 'info');
     } catch (err) {
       toast(errorMessage(err, 'Gagal menolak.'), 'error');
       await load();
     } finally {
       actingId = null;
+      targetJobId = null;
     }
   }
 </script>
@@ -181,14 +205,14 @@
                 disabled={actingId === job.id}
                 class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/10 transition disabled:opacity-50"
               >
-                Approve
+                Setujui
               </button>
               <button 
-                onclick={() => handleReject(job.id)}
+                onclick={() => openRejectModal(job.id)}
                 disabled={actingId === job.id}
                 class="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-semibold text-xs rounded-xl transition disabled:opacity-50"
               >
-                Reject
+                Tolak
               </button>
             </div>
           </div>
@@ -199,7 +223,72 @@
 
 </div>
 
+<!-- Modal Alasan Penolakan -->
+{#if isRejectModalOpen}
+  <div class="modal-backdrop" onclick={() => isRejectModalOpen = false}>
+    <div class="modal-card" onclick={(e) => e.stopPropagation()}>
+      <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-white modal-title-text">Alasan Penolakan Tugas</h3>
+        <button onclick={() => isRejectModalOpen = false} class="text-slate-400 hover:text-white font-bold">✕</button>
+      </div>
+
+      <form onsubmit={submitReject} class="space-y-4">
+        <div>
+          <label for="admin-reject-reason" class="block text-xs font-semibold text-slate-300 mb-2 modal-label-text">Tuliskan alasan penolakan untuk pemberi kerja:</label>
+          <textarea 
+            id="admin-reject-reason"
+            bind:value={rejectionReason} 
+            rows="3" 
+            placeholder="Contoh: Deskripsi tugas kurang lengkap atau tidak sesuai aturan..."
+            class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 transition resize-none reject-textarea"
+            required
+          ></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button 
+            type="button" 
+            onclick={() => isRejectModalOpen = false} 
+            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition modal-btn-cancel"
+          >
+            Batal
+          </button>
+          <button 
+            type="submit" 
+            class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition"
+          >
+            Konfirmasi Tolak
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{/if}
+
 <style>
+  /* Modal Backdrop Styling */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 100;
+  }
+
+  .modal-card {
+    background-color: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 440px;
+    padding: 20px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+
   /* Light Theme Adjustments for Admin Dashboard */
   :global(body:not(.dark-theme)) .admin-dashboard-page {
     background-color: #f8fafc !important;
@@ -275,6 +364,31 @@
   }
 
   :global(body:not(.dark-theme)) .job-owner {
+    color: #334155 !important;
+  }
+
+  /* Modal Light Theme Overrides */
+  :global(body:not(.dark-theme)) .modal-card {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  :global(body:not(.dark-theme)) .modal-title-text {
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .modal-label-text {
+    color: #334155 !important;
+  }
+
+  :global(body:not(.dark-theme)) .reject-textarea {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .modal-btn-cancel {
+    background-color: #f1f5f9 !important;
     color: #334155 !important;
   }
 </style>

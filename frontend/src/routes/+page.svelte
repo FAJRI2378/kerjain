@@ -1,6 +1,9 @@
 <script>
+  import { onMount } from 'svelte';
+
   let searchQuery = "";
   let activeTab = "Semua";
+  let isDarkMode = $state(false); // State untuk mendeteksi mode saat ini
 
   const categories = ["Semua", "Konten & Media", "Desain", "Administrasi", "Operasional"];
 
@@ -60,6 +63,27 @@
       ? tasks
       : tasks.filter((task) => task.category === activeTab)
   );
+
+  // Load preferensi tema pengguna saat komponen dimuat
+  onMount(() => {
+    const savedTheme = localStorage.getItem('kerjain-theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      isDarkMode = true;
+      document.body.classList.add('dark-theme');
+    }
+  });
+
+  // Fungsi mengubah tema
+  function toggleTheme() {
+    isDarkMode = !isDarkMode;
+    if (isDarkMode) {
+      document.body.classList.add('dark-theme');
+      localStorage.setItem('kerjain-theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-theme');
+      localStorage.setItem('kerjain-theme', 'light');
+    }
+  }
 </script>
 
 <div class="page">
@@ -77,6 +101,15 @@
       </a>
 
       <nav class="site-nav">
+        <!-- Tombol Toggle Tema -->
+        <button class="theme-toggle" on:click={toggleTheme} aria-label="Toggle Dark Mode">
+          {#if isDarkMode}
+            ☀️
+          {:else}
+            🌙
+          {/if}
+        </button>
+
         <a href="/register" class="btn-primary-header">
           <span class="plus-icon">+</span> Buka Lowongan / Cari Pekerjaan
         </a>
@@ -97,7 +130,7 @@
         </p>
 
         <div class="search-box">
-          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b96a5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
@@ -204,7 +237,6 @@
   </main>
 
   <!-- Footer -->
-<!-- Footer -->
   <footer class="site-footer">
     <div class="shell footer-row">
       <div class="footer-brand-group">
@@ -222,13 +254,97 @@
 </div>
 
 <style>
+  /* ================= CSS VARIABLES & THEMING ================= */
+  :global(:root) {
+    --bg-body: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+
+    --bg-surface: #ffffff;
+    --border-color: #e2e8f0;
+
+    --btn-primary-bg: #15803d;
+    --btn-primary-text: #ffffff;
+    --btn-primary-hover: #166534;
+
+    --btn-action-bg: #0d233a;
+    --btn-action-text: #ffffff;
+    --btn-action-hover: #1e293b;
+
+    --hero-bg: #0d233a;
+    --hero-text: #ffffff;
+    --hero-subtitle: #94a3b8;
+    --hero-divider: rgba(255, 255, 255, 0.15);
+    
+    --search-icon: #8b96a5;
+
+    --tab-bg: #ffffff;
+    --tab-text: #475569;
+    --tab-active-bg: #0d233a;
+    --tab-active-text: #ffffff;
+
+    --badge-cat-bg: #dcfce7;
+    --badge-cat-text: #166534;
+    --tag-bg: #f1f5f9;
+    --tag-text: #64748b;
+
+    --footer-bg: #0d233a;
+    --footer-border: #1e293b;
+    
+    --brand-text: #0d233a;
+  }
+
+  /* Dark Mode Overrides */
+  :global(body.dark-theme) {
+    --bg-body: #0f172a;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+
+    --bg-surface: #1e293b;
+    --border-color: #334155;
+
+    --btn-primary-bg: #10b981;
+    --btn-primary-text: #0f172a;
+    --btn-primary-hover: #059669;
+
+    --btn-action-bg: #d9f99d;
+    --btn-action-text: #0f172a;
+    --btn-action-hover: #bef264;
+
+    --hero-bg: #09131f;
+    --hero-text: #ffffff;
+    --hero-subtitle: #94a3b8;
+    --hero-divider: rgba(255, 255, 255, 0.1);
+    
+    --search-icon: #94a3b8;
+
+    --tab-bg: #1e293b;
+    --tab-text: #cbd5e1;
+    --tab-active-bg: #d9f99d;
+    --tab-active-text: #0f172a;
+
+    --badge-cat-bg: rgba(34, 197, 94, 0.2);
+    --badge-cat-text: #4ade80;
+    --tag-bg: #334155;
+    --tag-text: #e2e8f0;
+
+    --footer-bg: #09131f;
+    --footer-border: #1e293b;
+    
+    --brand-text: #f8fafc;
+  }
+
+  /* ================= GLOBAL STYLES ================= */
   :global(body) {
     margin: 0;
     padding: 0;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #f8fafc;
-    color: #0f172a;
+    background-color: var(--bg-body);
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s, color 0.3s;
   }
 
   * {
@@ -241,73 +357,14 @@
     padding: 0 24px;
   }
 
-  /* ---------- Footer Styles ---------- */
-  .site-footer {
-    background-color: #0d233a;
-    border-top: 1px solid #1e293b;
-    padding: 36px 0;
-    color: #94a3b8;
-  }
-
-  .footer-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 13px;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  .footer-brand-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .footer-logo-wrap {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #1e293b;
-    flex-shrink: 0;
-  }
-
-  .footer-logo-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .footer-brand {
-    font-weight: 800;
-    color: #ffffff;
-    letter-spacing: 0.05em;
-    font-size: 15px;
-  }
-
-  .footer-sub {
-    margin: 2px 0 0;
-    font-size: 12px;
-    color: #94a3b8;
-  }
-
-  .copyright {
-    margin: 0;
-    font-size: 12.5px;
-    color: #64748b;
-  }
-
   /* ---------- Header ---------- */
   .site-header {
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 50;
+    transition: background-color 0.3s, border-color 0.3s;
   }
 
   .header-row {
@@ -332,14 +389,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #0d233a;
+    background-color: #0d233a; /* Logo background remains steady */
     flex-shrink: 0;
   }
 
   .brand-img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Agar logo tidak terpotong */
+    object-fit: cover;
   }
 
   .brand-text {
@@ -351,8 +408,9 @@
     font-weight: 800;
     font-size: 18px;
     letter-spacing: 0.02em;
-    color: #0d233a;
+    color: var(--brand-text);
     line-height: 1.1;
+    transition: color 0.3s;
   }
 
   .brand-tagline {
@@ -364,34 +422,58 @@
   .site-nav {
     display: flex;
     align-items: center;
-    gap: 32px;
+    gap: 16px; /* Reduced gap slightly to fit button */
+  }
+  
+  @media (min-width: 768px) {
+    .site-nav { gap: 32px; }
+  }
+
+  .theme-toggle {
+    background: var(--tag-bg);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s;
+  }
+
+  .theme-toggle:hover {
+    background: var(--border-color);
   }
 
   .btn-primary-header {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background-color: #15803d;
-    color: #ffffff;
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
     padding: 10px 20px;
     border-radius: 8px;
     font-weight: 600;
     font-size: 14px;
     text-decoration: none;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, color 0.2s;
   }
 
   .btn-primary-header:hover {
-    background-color: #166534;
+    background-color: var(--btn-primary-hover);
   }
 
   /* ---------- Hero Section ---------- */
   .hero-section {
-    background-color: #0d233a;
-    color: #ffffff;
+    background-color: var(--hero-bg);
+    color: var(--hero-text);
     padding: 72px 0 88px;
     position: relative;
     overflow: hidden;
+    transition: background-color 0.3s;
   }
 
   .hero-container {
@@ -419,25 +501,28 @@
   }
 
   .hero-subtitle {
-    color: #94a3b8;
+    color: var(--hero-subtitle);
     font-size: 16px;
     line-height: 1.6;
     max-width: 520px;
     margin-bottom: 36px;
+    transition: color 0.3s;
   }
 
   .search-box {
-    background: #ffffff;
+    background: var(--bg-surface);
     border-radius: 12px;
     padding: 6px 6px 6px 16px;
     display: flex;
     align-items: center;
     max-width: 560px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s;
   }
 
   .search-icon {
     margin-right: 12px;
+    stroke: var(--search-icon);
   }
 
   .search-box input {
@@ -445,12 +530,13 @@
     outline: none;
     width: 100%;
     font-size: 14px;
-    color: #1e293b;
+    color: var(--text-primary);
+    background: transparent;
   }
 
   .btn-search {
-    background-color: #15803d;
-    color: white;
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
     border: none;
     padding: 12px 24px;
     border-radius: 8px;
@@ -458,11 +544,11 @@
     font-size: 14px;
     cursor: pointer;
     white-space: nowrap;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, color 0.2s;
   }
 
   .btn-search:hover {
-    background-color: #166534;
+    background-color: var(--btn-primary-hover);
   }
 
   .hero-stats-panel {
@@ -475,7 +561,8 @@
   .stats-divider {
     width: 1px;
     height: 180px;
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: var(--hero-divider);
+    transition: background-color 0.3s;
   }
 
   .stat-number {
@@ -489,19 +576,19 @@
   .stat-label {
     font-size: 18px;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--hero-text);
     margin: 12px 0 32px;
     line-height: 1.3;
   }
 
   .quote-box {
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-top: 1px solid var(--hero-divider);
     padding-top: 16px;
   }
 
   .quote-text {
     font-style: italic;
-    color: #94a3b8;
+    color: var(--hero-subtitle);
     font-size: 13.5px;
     margin: 0 0 12px;
   }
@@ -529,7 +616,7 @@
   }
 
   .section-label {
-    color: #15803d;
+    color: #10b981;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -546,14 +633,16 @@
   .section-title {
     font-size: 28px;
     font-weight: 800;
-    color: #0d233a;
+    color: var(--text-primary);
     margin: 0;
+    transition: color 0.3s;
   }
 
   .task-count {
-    color: #94a3b8;
+    color: var(--text-muted);
     font-size: 14px;
     font-weight: 500;
+    transition: color 0.3s;
   }
 
   .category-tabs {
@@ -565,21 +654,22 @@
   }
 
   .tab-btn {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--tab-bg);
+    border: 1px solid var(--border-color);
     padding: 10px 20px;
     border-radius: 8px;
     font-size: 13.5px;
     font-weight: 700;
-    color: #475569;
+    color: var(--tab-text);
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
   }
 
   .tab-btn.active {
-    background-color: #0d233a;
-    color: #ffffff;
-    border-color: #0d233a;
+    background-color: var(--tab-active-bg);
+    color: var(--tab-active-text);
+    border-color: var(--tab-active-bg);
   }
 
   /* ---------- Tasks Grid & Cards ---------- */
@@ -596,14 +686,14 @@
   }
 
   .task-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 24px;
     display: flex;
     flex-direction: column;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s, border-color 0.3s;
   }
 
   .task-card:hover {
@@ -619,12 +709,13 @@
   }
 
   .badge-cat {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--badge-cat-bg);
+    color: var(--badge-cat-text);
     font-size: 12px;
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 6px;
+    transition: background-color 0.3s, color 0.3s;
   }
 
   .status-indicator {
@@ -633,7 +724,7 @@
     gap: 6px;
     font-size: 12px;
     font-weight: 700;
-    color: #166534;
+    color: #10b981;
   }
 
   .status-indicator .dot {
@@ -646,9 +737,10 @@
   .task-title {
     font-size: 18px;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--text-primary);
     margin: 0 0 12px;
     line-height: 1.3;
+    transition: color 0.3s;
   }
 
   .card-meta {
@@ -663,14 +755,16 @@
     align-items: center;
     gap: 6px;
     font-size: 13px;
-    color: #64748b;
+    color: var(--text-muted);
+    transition: color 0.3s;
   }
 
   .task-desc {
     font-size: 14px;
-    color: #475569;
+    color: var(--text-secondary);
     line-height: 1.5;
     margin: 0 0 16px;
+    transition: color 0.3s;
   }
 
   .tags-container {
@@ -681,53 +775,58 @@
   }
 
   .tag-pill {
-    background-color: #f1f5f9;
-    color: #64748b;
+    background-color: var(--tag-bg);
+    color: var(--tag-text);
     font-size: 12px;
     font-weight: 600;
     padding: 4px 10px;
     border-radius: 6px;
+    transition: background-color 0.3s, color 0.3s;
   }
 
   .card-footer {
     margin-top: auto;
     padding-top: 16px;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
+    transition: border-color 0.3s;
   }
 
   .reward-label {
     display: block;
     font-size: 10px;
     font-weight: 800;
-    color: #94a3b8;
+    color: var(--text-muted);
     letter-spacing: 0.05em;
     margin-bottom: 2px;
+    transition: color 0.3s;
   }
 
   .reward-value {
     font-size: 20px;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 8px;
+    transition: color 0.3s;
   }
 
   .duration-label {
     font-size: 12px;
     font-weight: 600;
-    color: #64748b;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 4px;
+    transition: color 0.3s;
   }
 
   .btn-action {
-    background-color: #0d233a;
-    color: #ffffff;
+    background-color: var(--btn-action-bg);
+    color: var(--btn-action-text);
     border: none;
     padding: 10px 18px;
     border-radius: 8px;
@@ -737,19 +836,20 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, color 0.2s;
   }
 
   .btn-action:hover {
-    background-color: #1e293b;
+    background-color: var(--btn-action-hover);
   }
 
   /* ---------- Footer ---------- */
   .site-footer {
-    background-color: #0d233a;
-    border-top: 1px solid #1e293b;
+    background-color: var(--footer-bg);
+    border-top: 1px solid var(--footer-border);
     padding: 32px 0;
     color: #94a3b8;
+    transition: background-color 0.3s, border-color 0.3s;
   }
 
   .footer-row {
@@ -757,20 +857,50 @@
     justify-content: space-between;
     align-items: center;
     font-size: 13px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-brand-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .footer-logo-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #0d233a;
+    flex-shrink: 0;
+  }
+
+  .footer-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .footer-brand {
     font-weight: 800;
     color: #ffffff;
     letter-spacing: 0.05em;
+    font-size: 15px;
   }
 
   .footer-sub {
     margin: 2px 0 0;
     font-size: 12px;
+    color: #94a3b8;
   }
 
   .copyright {
     margin: 0;
+    font-size: 12.5px;
+    color: #64748b;
   }
 </style>
