@@ -1,68 +1,87 @@
 <script>
   import { onMount } from 'svelte';
+  import { api } from '$lib/api/client.js';
+  import { formatRupiah } from '$lib/format.js';
 
-  let searchQuery = "";
-  let activeTab = "Semua";
+  const PER_PAGE = 6;
+  const VISIBLE_CHIPS = 8;
+
+  let searchQuery = $state("");
+  let activeSearch = $state("");
+  let selectedSlug = $state("all");
+  let categories = $state([]);
+  let jobs = $state([]);
+  let page = $state(1);
+  let lastPage = $state(1);
+  let total = $state(0);
+  let loading = $state(true);
+  let loadError = $state(null);
+  let categorySelectValue = $state("");
   let isDarkMode = $state(false); // State untuk mendeteksi mode saat ini
 
-  const categories = ["Semua", "Konten & Media", "Desain", "Administrasi", "Operasional"];
+  let visibleCategories = $derived(categories.slice(0, VISIBLE_CHIPS));
+  let hiddenCategories = $derived(categories.slice(VISIBLE_CHIPS));
 
-  const tasks = [
-    {
-      id: 1,
-      category: "Konten & Media",
-      status: "Buka",
-      title: "Foto Produk 20 Menu + Upload ke Gofood",
-      employer: "Soto Ayam Pak Budi",
-      location: "1.4 km · Tebet, Jakarta Selatan",
-      description: "Dibutuhkan anak muda atau mahasiswa yang paham mengambil foto makanan aesthetic menggunakan HP.",
-      tags: ["#Foto", "#Content Creator", "#Entry Data"],
-      reward: "Rp 75.000",
-      duration: "3 Jam"
-    },
-    {
-      id: 2,
-      category: "Desain",
-      status: "Buka",
-      title: "Desain Poster Promo Grand Opening (A3)",
-      employer: "Kopi Kenangan Lokal",
-      location: "0.8 km · Pancasila, Depok",
-      description: "Buat poster promo beli 1 gratis 1 yang menarik untuk dipasang di depan kedai kopi.",
-      tags: ["#Canva", "#Desain Grafis"],
-      reward: "Rp 50.000",
-      duration: "2 Jam"
-    },
-    {
-      id: 3,
-      category: "Administrasi",
-      status: "Buka",
-      title: "Bantu Input Stok Barang ke Excel/Aplikasi",
-      employer: "Toko Berkah Kelontong",
-      location: "2.1 km · Margonda, Depok",
-      description: "Rapikan stok sembako yang baru datang dan catat ke dalam file Excel toko.",
-      tags: ["#Excel", "#Input Data", "#Teliti"],
-      reward: "Rp 100.000",
-      duration: "4 Jam"
-    },
-    {
-      id: 4,
-      category: "Operasional",
-      status: "Buka",
-      title: "Bantu Packing 100 Box Snack Box",
-      employer: "Dapur Mama Snack",
-      location: "3.0 km · Kukusan, Depok",
-      description: "Bantu packing snack box acara seminar untuk esok pagi.",
-      tags: ["#Physical Work", "#Bantu Event"],
-      reward: "Rp 60.000",
-      duration: "2.5 Jam"
+  let pages = $derived.by(() => {
+    if (lastPage <= 7) return Array.from({ length: lastPage }, (_, i) => i + 1);
+    const window = [...new Set([1, 2, lastPage - 1, lastPage, page, page - 1, page + 1])]
+      .filter((p) => p >= 1 && p <= lastPage)
+      .sort((a, b) => a - b);
+    const out = [];
+    let prev = 0;
+    for (const p of window) {
+      if (prev && p - prev > 1) out.push("...");
+      out.push(p);
+      prev = p;
     }
-  ];
+    return out;
+  });
 
-  let filteredTasks = $derived(
-    activeTab === "Semua"
-      ? tasks
-      : tasks.filter((task) => task.category === activeTab)
-  );
+  async function loadCategories() {
+    const res = await api.get('/api/categories');
+    categories = res.data ?? [];
+  }
+
+  async function loadJobs() {
+    loading = true;
+    loadError = null;
+    try {
+      const params = new URLSearchParams({ per_page: String(PER_PAGE), page: String(page) });
+      if (activeSearch.trim()) params.set('search', activeSearch.trim());
+      if (selectedSlug !== 'all') params.set('category', selectedSlug);
+      const res = await api.get(`/api/jobs?${params.toString()}`);
+      jobs = res.data ?? [];
+      page = res.meta?.current_page ?? 1;
+      lastPage = res.meta?.last_page ?? 1;
+      total = res.meta?.total ?? jobs.length;
+    } catch (err) {
+      jobs = [];
+      total = 0;
+      loadError = err.message || 'Gagal memuat tugas.';
+    } finally {
+      loading = false;
+    }
+  }
+
+  function handleSearch(event) {
+    event.preventDefault();
+    activeSearch = searchQuery;
+    page = 1;
+    loadJobs();
+  }
+
+  function selectCategory(slug) {
+    selectedSlug = slug;
+    categorySelectValue = "";
+    page = 1;
+    loadJobs();
+  }
+
+  function goToPage(p) {
+    if (p < 1 || p > lastPage || p === page) return;
+    page = p;
+    loadJobs();
+  }
 
   // Load preferensi tema pengguna saat komponen dimuat
   onMount(() => {
@@ -71,6 +90,8 @@
       isDarkMode = true;
       document.body.classList.add('dark-theme');
     }
+
+    Promise.all([loadCategories(), loadJobs()]).catch(() => {});
   });
 
   // Fungsi mengubah tema
@@ -102,7 +123,7 @@
 
       <nav class="site-nav">
         <!-- Tombol Toggle Tema -->
-        <button class="theme-toggle" on:click={toggleTheme} aria-label="Toggle Dark Mode">
+        <button class="theme-toggle" onclick={toggleTheme} aria-label="Toggle Dark Mode">
           {#if isDarkMode}
             ☀️
           {:else}
@@ -129,7 +150,7 @@
           Ambil pekerjaan singkat dari UMKM sekitar, dapatkan pengalaman nyata, dan bantu bisnis lokal tumbuh.
         </p>
 
-        <div class="search-box">
+        <form class="search-box" onsubmit={handleSearch}>
           <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -139,8 +160,8 @@
             placeholder="Cari Foto, Excel, Desain..." 
             bind:value={searchQuery}
           />
-          <button class="btn-search">Cari Tugas</button>
-        </div>
+          <button class="btn-search" type="submit">Cari Tugas</button>
+        </form>
       </div>
 
       <div class="hero-stats-panel">
@@ -167,72 +188,130 @@
       
       <div class="tasks-header">
         <h2 class="section-title">Tugas di sekitarmu</h2>
-        <span class="task-count">{filteredTasks.length} tugas tersedia</span>
+        <span class="task-count">{total} tugas tersedia</span>
       </div>
 
       <!-- Category Filter Tabs -->
       <div class="category-tabs">
-        {#each categories as cat}
+        <button 
+          class="tab-btn {selectedSlug === 'all' ? 'active' : ''}" 
+          onclick={() => selectCategory('all')}
+        >
+          Semua
+        </button>
+        {#each visibleCategories as cat}
           <button 
-            class="tab-btn {activeTab === cat ? 'active' : ''}" 
-            on:click={() => activeTab = cat}
+            class="tab-btn {selectedSlug === cat.slug ? 'active' : ''}" 
+            onclick={() => selectCategory(cat.slug)}
           >
-            {cat}
+            {cat.name}
           </button>
         {/each}
+
+        {#if hiddenCategories.length > 0}
+          <div class="category-dropdown-wrap">
+            <select
+              class="category-select"
+              bind:value={categorySelectValue}
+              onchange={() => {
+                if (categorySelectValue) {
+                  selectCategory(categorySelectValue);
+                }
+              }}
+            >
+              <option value="">Kategori Lainnya ▾</option>
+              {#each hiddenCategories as cat}
+                <option value={cat.slug}>{cat.name}</option>
+              {/each}
+            </select>
+          </div>
+        {/if}
       </div>
 
-      <!-- Task Cards Grid -->
-      <div class="tasks-grid">
-        {#each filteredTasks as task (task.id)}
-          <div class="task-card">
-            <div class="card-header">
-              <span class="badge-cat">{task.category}</span>
-              <span class="status-indicator">
-                <span class="dot"></span> {task.status}
-              </span>
-            </div>
-
-            <h3 class="task-title">{task.title}</h3>
-
-            <div class="card-meta">
-              <span class="meta-item">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                {task.employer}
-              </span>
-              <span class="meta-item">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
-                {task.location}
-              </span>
-            </div>
-
-            <p class="task-desc">{task.description}</p>
-
-            <div class="tags-container">
-              {#each task.tags as tag}
-                <span class="tag-pill">{tag}</span>
-              {/each}
-            </div>
-
-            <div class="card-footer">
-              <div class="reward-info">
-                <span class="reward-label">IMBALAN</span>
-                <div class="reward-value">
-                  {task.reward} 
-                  <span class="duration-label">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    {task.duration}
-                  </span>
-                </div>
+      {#if loading}
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Memuat tugas...</p>
+        </div>
+      {:else if loadError}
+        <div class="error-state">
+          <p>{loadError}</p>
+          <button class="btn-action" onclick={loadJobs}>Coba Lagi</button>
+        </div>
+      {:else if jobs.length === 0}
+        <div class="empty-state">
+          <p>Belum ada tugas yang cocok.</p>
+        </div>
+      {:else}
+        <!-- Task Cards Grid -->
+        <div class="tasks-grid">
+          {#each jobs as task (task.id)}
+            <div class="task-card">
+              <div class="card-header">
+                <span class="badge-cat">{task.category?.name ?? 'Tugas Mikro'}</span>
+                <span class="status-indicator">
+                  <span class="dot"></span> Buka
+                </span>
               </div>
 
-              <button class="btn-action">
-                Ambil Tugas <span class="arrow">→</span>
-              </button>
+              <h3 class="task-title">{task.title}</h3>
+
+              <div class="card-meta">
+                <span class="meta-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                  {task.owner?.name ?? '-'}
+                </span>
+                <span class="meta-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                  {task.location ?? 'Lokasi Lokal'}
+                </span>
+              </div>
+
+              <p class="task-desc">{task.description}</p>
+
+              <div class="tags-container">
+                <span class="tag-pill">#{task.category?.name ?? 'Tugas Mikro'}</span>
+              </div>
+
+              <div class="card-footer">
+                <div class="reward-info">
+                  <span class="reward-label">IMBALAN</span>
+                  <div class="reward-value">
+                    {formatRupiah(task.budget)}
+                    {#if task.deadline}
+                      <span class="duration-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        {task.deadline}
+                      </span>
+                    {/if}
+                  </div>
+                </div>
+
+                <a class="btn-action" href="/login">
+                  Ambil Tugas <span class="arrow">→</span>
+                </a>
+              </div>
+            </div>
+          {/each}
+        </div>
+
+        {#if lastPage > 1}
+          <div class="pagination-container">
+            <span class="pagination-info">Halaman {page} dari {lastPage} · {total} tugas tersedia</span>
+            <div class="pagination-buttons">
+              <button class="btn-page" onclick={() => goToPage(page - 1)} disabled={page <= 1}>←</button>
+              {#each pages as p}
+                {#if p === '...'}
+                  <span class="btn-page dots">…</span>
+                {:else}
+                  <button class="btn-page {page === p ? 'active-page' : ''}" onclick={() => goToPage(p)}>{p}</button>
+                {/if}
+              {/each}
+              <button class="btn-page" onclick={() => goToPage(page + 1)} disabled={page >= lastPage}>→</button>
             </div>
           </div>
-        {/each}
-      </div>
+        {/if}
+      {/if}
     </div>
   </main>
 
@@ -647,10 +726,30 @@
 
   .category-tabs {
     display: flex;
+    align-items: center;
     gap: 10px;
     margin-bottom: 32px;
     overflow-x: auto;
     padding-bottom: 4px;
+  }
+
+  .category-dropdown-wrap {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .category-select {
+    background: var(--tab-bg);
+    border: 1px solid var(--border-color);
+    color: var(--tab-text);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
   }
 
   .tab-btn {
@@ -670,6 +769,42 @@
     background-color: var(--tab-active-bg);
     color: var(--tab-active-text);
     border-color: var(--tab-active-bg);
+  }
+
+  /* ---------- Loading / Error / Empty States ---------- */
+  .loading-state,
+  .error-state,
+  .empty-state {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--text-secondary);
+    transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-color);
+    border-top-color: #15803d;
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .error-state p {
+    margin: 0 0 16px;
+  }
+
+  .empty-state p {
+    margin: 0;
+    font-weight: 600;
   }
 
   /* ---------- Tasks Grid & Cards ---------- */
@@ -833,14 +968,79 @@
     font-weight: 700;
     font-size: 13.5px;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
+    text-decoration: none;
     transition: background-color 0.2s, color 0.2s;
   }
 
   .btn-action:hover {
     background-color: var(--btn-action-hover);
+  }
+
+  /* ---------- Pagination ---------- */
+  .pagination-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 16px;
+  }
+
+  @media (min-width: 640px) {
+    .pagination-container {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
+
+  .pagination-info {
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: color 0.3s;
+  }
+
+  .pagination-buttons {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .btn-page {
+    background: var(--tab-bg);
+    border: 1px solid var(--border-color);
+    color: var(--tab-text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-page:hover:not(:disabled) {
+    background: var(--tag-bg);
+    color: var(--text-primary);
+  }
+
+  .btn-page.active-page {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    border-color: var(--btn-primary-bg);
+  }
+
+  .btn-page:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-page.dots {
+    background: transparent;
+    border-color: transparent;
+    cursor: default;
+    color: var(--text-muted);
   }
 
   /* ---------- Footer ---------- */

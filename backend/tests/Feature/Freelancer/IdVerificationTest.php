@@ -16,19 +16,29 @@ class IdVerificationTest extends TestCase
 
         $this->actingAs($freelancer, 'sanctum')
             ->postJson('/api/freelancer/verification', [
-                'nik' => '3201010101010001',
+                'phone' => '081234567890',
+                'email' => 'andi@worker.id',
+                'bank_name' => 'BCA',
+                'account_number' => '1234567890',
+                'account_holder_name' => 'Andi Pratama',
             ])
             ->assertOk()
-            ->assertJsonPath('message', 'Dokumen KTP berhasil dikirim! Verifikasi sedang diproses.');
+            ->assertJsonPath('message', 'Data verifikasi berhasil dikirim! Verifikasi sedang diproses.');
+
+        $this->assertDatabaseHas('verifications', [
+            'user_id' => $freelancer->id,
+            'role' => 'freelancer',
+            'status' => 'pending',
+        ]);
     }
 
-    public function test_verification_with_invalid_nik_fails(): void
+    public function test_verification_with_missing_fields_fails(): void
     {
         $freelancer = User::factory()->freelancer()->create();
 
         $this->actingAs($freelancer, 'sanctum')
             ->postJson('/api/freelancer/verification', [
-                'nik' => '123',
+                'phone' => '081234567890',
             ])
             ->assertStatus(422);
     }
@@ -39,7 +49,10 @@ class IdVerificationTest extends TestCase
 
         $this->actingAs($hirer, 'sanctum')
             ->postJson('/api/freelancer/verification', [
-                'nik' => '3201010101010001',
+                'phone' => '081234567890',
+                'email' => 'budi@umkm.id',
+                'bank_name' => 'BCA',
+                'account_number' => '1234567890',
             ])
             ->assertStatus(403);
     }

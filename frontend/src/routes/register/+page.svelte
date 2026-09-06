@@ -8,6 +8,7 @@
   let fullName = $state('');
   let businessName = $state('');
   let email = $state('');
+  let phone = $state('');
   let password = $state('');
   let showPassword = $state(false);
   let submitting = $state(false);
@@ -22,6 +23,7 @@
         role,
         name: fullName,
         email,
+        phone,
         password,
         ...(role === 'hirer' ? { business_name: businessName } : {})
       };
@@ -126,6 +128,20 @@
         />
         {#if formErrors.email}
           <p class="error-msg">{(formErrors.email).join(', ')}</p>
+        {/if}
+      </div>
+
+      <div class="form-group">
+        <label for="reg-phone">Nomor WhatsApp</label>
+        <input 
+          id="reg-phone" 
+          type="tel" 
+          required 
+          placeholder="08xx-xxxx-xxxx" 
+          bind:value={phone}
+        />
+        {#if formErrors.phone}
+          <p class="error-msg">{(formErrors.phone).join(', ')}</p>
         {/if}
       </div>
 

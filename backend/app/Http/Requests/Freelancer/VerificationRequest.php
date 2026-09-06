@@ -14,7 +14,11 @@ class VerificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nik' => ['required', 'string', 'size:16', 'regex:/^\d+$/'],
+            'phone' => ['required', 'string', 'max:20'],
+            'email' => ['required', 'email', 'max:255'],
+            'bank_name' => ['required', 'string', 'max:100'],
+            'account_number' => ['required', 'string', 'max:40'],
+            'account_holder_name' => ['required', 'string', 'max:100'],
         ];
     }
 }

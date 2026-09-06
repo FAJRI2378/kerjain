@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { api } from '$lib/api/client.js';
+  import { api, getBlobUrl } from '$lib/api/client.js';
   import { formatRupiah } from '$lib/format.js';
   import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
 
@@ -15,6 +15,35 @@
   let targetJobId = $state(null);
   let rejectionReason = $state('');
   let isSubmitting = $state(false);
+
+  // State untuk Modal Detail Tugas
+  let detailJob = $state(null);
+  let isDetailModalOpen = $state(false);
+  let loadingDetail = $state(false);
+  let detailProofBlob = $state(null);
+
+  // Membuka detail tugas
+  async function viewDetail(id) {
+    isDetailModalOpen = true;
+    loadingDetail = true;
+    detailProofBlob = null;
+    try {
+      const res = await api.get(`/api/tasks/${id}`);
+      detailJob = res.data ?? null;
+      if (detailJob?.proof_image_url) {
+        try {
+          detailProofBlob = await getBlobUrl(detailJob.proof_image_url);
+        } catch {
+          detailProofBlob = null;
+        }
+      }
+    } catch (err) {
+      toast(errorMessage(err, 'Gagal memuat detail tugas.'), 'error');
+      isDetailModalOpen = false;
+    } finally {
+      loadingDetail = false;
+    }
+  }
 
   async function load() {
     loading = true;
@@ -190,6 +219,7 @@
               </td>
               <td class="p-4 text-right">
                 <div class="flex items-center justify-end gap-2">
+                  <button onclick={() => viewDetail(job.id)} class="px-2.5 py-1.5 bg-slate-700/40 hover:bg-slate-700/60 text-slate-200 font-bold rounded-lg transition">Detail</button>
                   {#if job.status === 'pending'}
                     <button onclick={() => approveJob(job.id)} class="px-2.5 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold rounded-lg transition">Setujui</button>
                     <button onclick={() => openRejectModal(job.id)} class="px-2.5 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold rounded-lg transition">Tolak</button>
@@ -211,6 +241,105 @@
     </div>
   </div>
 </div>
+
+<!-- Modal Detail Tugas -->
+{#if isDetailModalOpen}
+  <div class="modal-backdrop" onclick={() => isDetailModalOpen = false}>
+    <div class="modal-card detail-modal-card" onclick={(e) => e.stopPropagation()}>
+      <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-white">Detail Tugas #{detailJob?.id}</h3>
+        <button onclick={() => isDetailModalOpen = false} class="text-slate-400 hover:text-white font-bold">✕</button>
+      </div>
+
+      {#if loadingDetail}
+        <div class="text-center py-12 text-slate-500 text-xs">Memuat detail tugas...</div>
+      {:else if detailJob}
+        <div class="space-y-4 text-xs">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2 py-0.5 bg-slate-800 text-slate-300 rounded text-[10px] font-semibold">{detailJob.category?.name ?? '-'}</span>
+            <span class="px-2 py-0.5 rounded font-bold text-[10px] {detailJob.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : detailJob.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : detailJob.status === 'rejected' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-slate-500/10 text-slate-300 border border-slate-500/20'}">
+              {detailJob.status}
+            </span>
+          </div>
+
+          <div>
+            <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Judul</p>
+            <p class="font-bold text-white text-sm">{detailJob.title}</p>
+          </div>
+
+          <div>
+            <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Deskripsi</p>
+            <p class="text-slate-300 leading-relaxed whitespace-pre-line">{detailJob.description || '-'}</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Budget</p>
+              <p class="font-bold text-emerald-400">{formatRupiah(detailJob.budget)}</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Lokasi</p>
+              <p class="font-bold text-slate-200">{detailJob.location || '-'}</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Deadline</p>
+              <p class="font-bold text-slate-200">{detailJob.deadline || '-'}</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Pelamar</p>
+              <p class="font-bold text-slate-200">{detailJob.applicants_count ?? 0} orang</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Pembuat</p>
+              <p class="font-bold text-slate-200">{detailJob.owner?.name ?? '-'}</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Dibuat</p>
+              <p class="font-bold text-slate-200">
+                {detailJob.created_at ? new Date(detailJob.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+              </p>
+            </div>
+          </div>
+
+          {#if detailJob.status === 'rejected' && detailJob.rejection_reason}
+            <div class="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300">
+              <p class="font-bold mb-1">⚠️ Alasan Penolakan</p>
+              <p class="italic leading-relaxed">"{detailJob.rejection_reason}"</p>
+            </div>
+          {/if}
+
+          {#if detailJob.status === 'reviewing' || (detailJob.proof_url || detailProofBlob)}
+            <div class="p-3 rounded-lg bg-slate-800/50 border border-slate-700 space-y-2">
+              <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500">📎 Bukti Pekerjaan</p>
+              {#if detailJob.proof_url}
+                <a href={detailJob.proof_url} target="_blank" rel="noreferrer" class="inline-block px-3 py-2 bg-blue-500/10 text-blue-400 font-bold text-xs rounded-lg transition">
+                  🔗 Lihat Bukti (Link)
+                </a>
+              {/if}
+              {#if detailProofBlob}
+                <img src={detailProofBlob} alt="Bukti pekerjaan" class="w-full rounded-lg border border-slate-700 max-h-72 object-cover" />
+              {/if}
+            </div>
+          {/if}
+
+          <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+            {#if detailJob.status === 'pending'}
+              <button onclick={() => { isDetailModalOpen = false; approveJob(detailJob.id); }} class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition">
+                Setujui
+              </button>
+              <button onclick={() => { isDetailModalOpen = false; openRejectModal(detailJob.id); }} class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition">
+                Tolak
+              </button>
+            {/if}
+            <button onclick={() => isDetailModalOpen = false} class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg transition">
+              Tutup
+            </button>
+          </div>
+        </div>
+      {/if}
+    </div>
+  </div>
+{/if}
 
 <!-- Modal Alasan Penolakan -->
 {#if isRejectModalOpen}
@@ -365,5 +494,29 @@
     background-color: #f8fafc !important;
     border-color: #cbd5e1 !important;
     color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .detail-modal-card h3 {
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .detail-modal-card .border-slate-800 {
+    border-color: #e2e8f0 !important;
+  }
+
+  :global(body:not(.dark-theme)) .detail-modal-card .text-white {
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .detail-modal-card .text-slate-300 {
+    color: #334155 !important;
+  }
+
+  :global(body:not(.dark-theme)) .detail-modal-card .text-slate-200 {
+    color: #334155 !important;
+  }
+
+  :global(body:not(.dark-theme)) .detail-modal-card .bg-slate-800 {
+    background-color: #f1f5f9 !important;
   }
 </style>

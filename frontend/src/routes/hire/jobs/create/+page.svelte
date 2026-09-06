@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client.js';
+  import { auth } from '$lib/stores/auth.svelte.js';
   import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
 
   let title = $state('');
@@ -12,6 +13,8 @@
   let categories = $state([]);
   let submitting = $state(false);
   let formErrors = $state({});
+
+  let unverifiedGate = $derived(!!(auth.user && !auth.user.is_verified));
 
   onMount(async () => {
     try {
@@ -56,7 +59,15 @@
     <p class="page-sub">Post tugas harian atau sampingan untuk diselesaikan oleh freelancer terverifikasi.</p>
   </div>
 
-  <form onsubmit={handleSubmit} class="card form-card">
+  {#if unverifiedGate}
+    <div class="verify-gate">
+      <div class="gate-icon">🏪</div>
+      <h2 class="gate-title">Verifikasi Usaha Dulu, Yuk!</h2>
+      <p class="gate-sub">Untuk memposting tugas, kamu perlu verifikasi tempat usaha. Prosesnya cepat — maksimal 1×24 jam. Browsing & kelola tugas tetap bisa diakses.</p>
+      <a href="/hire/verifikasi" class="btn-gate">Ajukan Verifikasi Usaha</a>
+    </div>
+  {:else}
+    <form onsubmit={handleSubmit} class="card form-card">
     <!-- Title -->
     <div class="form-group">
       <label for="title">Judul Tugas / Pekerjaan</label>
@@ -142,6 +153,7 @@
       </button>
     </div>
   </form>
+  {/if}
 </div>
 
 <style>
@@ -184,6 +196,68 @@
     border: 1px solid #e2e8f0;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
     transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+
+  /* Verify Gate */
+  .verify-gate {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 56px 32px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+
+  .gate-icon {
+    font-size: 44px;
+    margin-bottom: 4px;
+  }
+
+  .gate-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0d233a;
+    margin: 0;
+  }
+
+  .gate-sub {
+    font-size: 13.5px;
+    color: #64748b;
+    margin: 0 auto;
+    max-width: 460px;
+    line-height: 1.6;
+  }
+
+  .btn-gate {
+    display: inline-block;
+    margin-top: 12px;
+    background: #15803d;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.15);
+  }
+
+  .btn-gate:hover {
+    background: #166534;
+  }
+
+  :global(body.dark-theme .verify-gate) {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  :global(body.dark-theme .gate-title) {
+    color: #ffffff !important;
+  }
+  :global(body.dark-theme .gate-sub) {
+    color: #94a3b8 !important;
   }
 
   .form-card {

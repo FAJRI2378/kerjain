@@ -15,6 +15,9 @@ class BusinessProfile extends Model
         'business_name',
         'category',
         'phone',
+        'address',
+        'business_type',
+        'store_photo',
     ];
 
     public function user(): BelongsTo

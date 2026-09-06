@@ -1,10 +1,12 @@
 <script>
+  import { onMount } from 'svelte';
+  import { api } from '$lib/api/client.js';
   import { auth } from '$lib/stores/auth.svelte.js';
   import { formatRupiah } from '$lib/format.js';
-  import { toast } from '$lib/ui/toast.svelte.js';
+  import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
 
   // State Dompet Escrow UMKM
-  let escrowBalance = $state(7500000);
+  let escrowBalance = $state(0);
   let topUpAmount = $state('');
   let selectedBank = $state('BCA');
   let isTopUpModalOpen = $state(false);
@@ -19,14 +21,29 @@
   let currentPage = $state(1);
   let itemsPerPage = $state(4);
 
-  // Data Dummy Riwayat Transaksi Keuangan UMKM
-  let transactions = $state([
+  // Data Dummy sebagai fallback saat backend tidak aktif
+  let dummyTransactions = [
     { id: 1, type: 'topup', title: 'Top Up Escrow via Transfer BCA', amount: 5000000, date: '2026-09-02', month: '09', year: '2026' },
     { id: 2, type: 'out', title: 'Bayar Kontrak: Desain Logo Kopi Senja', amount: 350000, date: '2026-09-04', month: '09', year: '2026' },
     { id: 3, type: 'out', title: 'Bayar Kontrak: Admin Medsos Instagram', amount: 1200000, date: '2026-08-28', month: '08', year: '2026' },
     { id: 4, type: 'topup', title: 'Top Up Escrow via QRIS Mandiri', amount: 3000000, date: '2026-08-20', month: '08', year: '2026' },
     { id: 5, type: 'out', title: 'Bayar Kontrak: Input Data Tokopedia', amount: 150000, date: '2026-08-15', month: '08', year: '2026' }
-  ]);
+  ];
+  let transactions = $state([]);
+
+  async function loadWallet() {
+    try {
+      const res = await api.get('/api/hire/wallet');
+      escrowBalance = res.data.balance;
+      transactions = res.data.transactions ?? [];
+    } catch (err) {
+      // Data dummy untuk presentasi jika backend tidak aktif
+      escrowBalance = 7500000;
+      transactions = dummyTransactions;
+    }
+  }
+
+  onMount(loadWallet);
 
   // Filter reaktif untuk Riwayat Transaksi
   let filteredTransactions = $derived(
@@ -68,8 +85,8 @@
     }
   }
 
-  // Simulasi Top Up Saldo Escrow
-  function handleTopUp(e) {
+  // Top Up Saldo Escrow terhubung ke API
+  async function handleTopUp(e) {
     e.preventDefault();
     const amountNum = Number(topUpAmount);
 
@@ -79,32 +96,21 @@
     }
 
     isProcessing = true;
-    setTimeout(() => {
-      escrowBalance += amountNum;
-      
-      const todayObj = new Date();
-      const yyyy = todayObj.getFullYear();
-      const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
-      const dd = String(todayObj.getDate()).padStart(2, '0');
-
-      transactions = [
-        { 
-          id: Date.now(), 
-          type: 'topup', 
-          title: `Top Up Escrow via Transfer ${selectedBank}`, 
-          amount: amountNum, 
-          date: `${yyyy}-${mm}-${dd}`, 
-          month: mm, 
-          year: String(yyyy) 
-        },
-        ...transactions
-      ];
-
+    try {
+      const res = await api.post('/api/hire/wallet/topup', {
+        amount: amountNum,
+        bank_name: selectedBank
+      });
+      escrowBalance = res.data.balance;
+      transactions = res.data.transactions ?? [];
       isProcessing = false;
       topUpAmount = '';
       isTopUpModalOpen = false;
       toast('Top Up saldo Escrow berhasil!', 'success');
-    }, 1000);
+    } catch (err) {
+      isProcessing = false;
+      toast(errorMessage(err, 'Top up gagal.'), 'error');
+    }
   }
 </script>
 

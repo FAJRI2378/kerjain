@@ -14,6 +14,7 @@ class TaskApplication extends Model
         'task_id',
         'worker_id',
         'status',
+        'proposal',
     ];
 
     public function task(): BelongsTo

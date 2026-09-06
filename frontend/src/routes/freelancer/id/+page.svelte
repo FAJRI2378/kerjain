@@ -1,5 +1,7 @@
 <script>
+  import { onMount } from 'svelte';
   import { api } from '$lib/api/client.js';
+  import { auth } from '$lib/stores/auth.svelte.js';
   import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
 
   let phoneNumber = $state('');
@@ -7,9 +9,14 @@
   let bankName = $state('');
   let customBankName = $state('');
   let accountNumber = $state('');
-  let isUploaded = $state(false);
+  let accountHolderName = $state('');
+  let isVerified = $derived(!!auth.user?.is_verified);
+  let verification = $state(null);
+  let loading = $state(true);
   let submitting = $state(false);
   let formErrors = $state({});
+
+  const status = $derived(verification?.status ?? null);
 
   const bankOptions = [
     'BCA',
@@ -24,10 +31,37 @@
     'Lainnya / Bank Lain'
   ];
 
+  onMount(async () => {
+    if (!auth.hydrated) auth.hydrate();
+    await loadStatus();
+    if (auth.user) {
+      const data = verification?.data ?? {};
+      phoneNumber = data.phone || auth.user.phone || '';
+      emailAddress = data.email || auth.user.email || '';
+      bankName = data.bank_name || '';
+      accountNumber = data.account_number || '';
+      accountHolderName = data.account_holder_name || auth.user.name || '';
+      if (typeof window !== 'undefined' && bankName && !bankOptions.includes(bankName)) {
+        customBankName = bankName;
+        bankName = 'Lainnya / Bank Lain';
+      }
+    }
+  });
+
+  async function loadStatus() {
+    try {
+      const res = await api.get('/api/verification/status');
+      verification = res.data ?? null;
+    } catch {
+      verification = null;
+    } finally {
+      loading = false;
+    }
+  }
+
   async function handleUpload(e) {
     e.preventDefault();
-    
-    // Validasi Manual Sebelum Kirim
+
     if (!phoneNumber.trim()) {
       toast('Masukkan nomor HP yang aktif!', 'error');
       return;
@@ -36,7 +70,7 @@
       toast('Masukkan alamat Gmail / Email!', 'error');
       return;
     }
-    
+
     const finalBankName = bankName === 'Lainnya / Bank Lain' ? customBankName.trim() : bankName;
     if (!finalBankName) {
       toast('Pilih atau masukkan nama bank Anda!', 'error');
@@ -46,27 +80,26 @@
       toast('Masukkan nomor rekening / E-Wallet!', 'error');
       return;
     }
+    if (!accountHolderName.trim()) {
+      toast('Masukkan nama pemegang rekening / E-Wallet!', 'error');
+      return;
+    }
 
     submitting = true;
     formErrors = {};
 
     try {
-      console.log('Mengirim data verifikasi:', {
+      const res = await api.post('/api/freelancer/verification', {
         phone: phoneNumber,
         email: emailAddress,
         bank_name: finalBankName,
-        account_number: accountNumber
+        account_number: accountNumber,
+        account_holder_name: accountHolderName
       });
 
-      const res = await api.post('/api/freelancer/verification', { 
-        phone: phoneNumber,
-        email: emailAddress,
-        bank_name: finalBankName,
-        account_number: accountNumber
-      });
-
-      isUploaded = true;
       toast('Data verifikasi berhasil dikirim!', 'success');
+      resetBankFields();
+      await loadStatus();
     } catch (err) {
       console.error('Error kirim verifikasi:', err);
 
@@ -74,11 +107,17 @@
         formErrors = err.data.errors;
         toast('Mohon periksa kembali inputan Anda.', 'error');
       } else {
-        toast(errorMessage ? errorMessage(err, 'Gagal mengirim verifikasi.') : 'Gagal mengirim verifikasi.', 'error');
+        toast(errorMessage(err, 'Gagal mengirim verifikasi.'), 'error');
       }
     } finally {
       submitting = false;
     }
+  }
+
+  function resetBankFields() {
+    bankName = '';
+    customBankName = '';
+    accountNumber = '';
   }
 </script>
 
@@ -86,99 +125,154 @@
   <!-- Top Banner / Header -->
   <div class="page-header">
     <h1 class="page-title">Verifikasi Identitas</h1>
-    <p class="page-sub">Verifikasi identitas dan kontak kamu untuk membangun kepercayaan UMKM dan memudahkan pencairan dana.</p>
+    <p class="page-sub">Verifikasi identitas dan kontak kamu untuk membangun kepercayaan UMKM dan membuka akses melamar pekerjaan.</p>
   </div>
 
-  {#if isUploaded}
-    <div class="success-card">
-      <div class="success-icon">🎉</div>
-      <h3 class="success-title">Data Verifikasi Berhasil Dikirim!</h3>
-      <p class="success-sub">Tim Kerjain sedang memverifikasi data dan rekening kamu. Proses ini membutuhkan waktu maksimal 1x24 jam.</p>
-    </div>
-  {:else}
-    <form onsubmit={handleUpload} class="verification-card" novalidate>
-
-      <!-- Gmail -->
-      <div class="form-group">
-        <label for="email-address">Alamat Gmail / Email <span class="req">*</span></label>
-        <div class="input-wrapper">
-          <input 
-            id="email-address"
-            type="email" 
-            placeholder="nama@gmail.com" 
-            bind:value={emailAddress}
-            class="form-input"
-          />
-          <span class="input-icon">✉️</span>
-        </div>
-        {#if formErrors.email}
-          <p class="error-msg">{(formErrors.email).join(', ')}</p>
-        {/if}
+  {#if !loading}
+    {#if isVerified}
+      <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <h3 class="success-title">Identitas Terverifikasi ✓</h3>
+        <p class="success-sub">Akun kamu telah terverifikasi. Kamu bisa melamar pekerjaan yang tersedia di platform.</p>
       </div>
-
-      <!-- Pilihan Bank / E-Wallet -->
-      <div class="form-group">
-        <label for="bank-select">Bank / E-Wallet <span class="req">*</span></label>
-        <select id="bank-select" bind:value={bankName} class="form-select">
-          <option value="" disabled selected>Pilih Bank atau E-Wallet...</option>
-          {#each bankOptions as bank}
-            <option value={bank}>{bank}</option>
-          {/each}
-        </select>
-        {#if formErrors.bank_name}
-          <p class="error-msg">{(formErrors.bank_name).join(', ')}</p>
-        {/if}
+    {:else if status === 'pending'}
+      <div class="success-card">
+        <div class="success-icon">⏳</div>
+        <h3 class="success-title">Data Verifikasi Sedang Direview</h3>
+        <p class="success-sub">Tim Kerjain sedang memverifikasi data dan rekening kamu. Proses ini membutuhkan waktu maksimal 1x24 jam. Kamu masih bisa mengubah data dan mengirim ulang.</p>
       </div>
+    {:else}
+      <form onsubmit={handleUpload} class="verification-card" novalidate>
 
-      <!-- Input Tambahan Jika Memilih "Lainnya / Bank Lain" -->
-      {#if bankName === 'Lainnya / Bank Lain'}
-        <div class="form-group custom-bank-group">
-          <label for="custom-bank">Nama Bank / E-Wallet Lainnya <span class="req">*</span></label>
+        {#if status === 'rejected'}
+          <div class="alert-card">
+            ⚠️ Pengajuan sebelumnya <strong>ditolak</strong>: "<em>{verification?.admin_note || 'Data kurang lengkap.'}</em>" Silakan perbaiki data di bawah dan kirim ulang.
+          </div>
+        {/if}
+
+        <!-- Nomor HP -->
+        <div class="form-group">
+          <label for="phone-number">Nomor HP / WhatsApp <span class="req">*</span></label>
           <div class="input-wrapper">
-            <input 
-              id="custom-bank"
-              type="text" 
-              placeholder="Contoh: Bank Permata, Seabank, LinkAja..." 
-              bind:value={customBankName}
+            <input
+              id="phone-number"
+              type="tel"
+              placeholder="Contoh: 081234567890"
+              bind:value={phoneNumber}
               class="form-input"
             />
-            <span class="input-icon">🏛️</span>
+            <span class="input-icon">📱</span>
           </div>
+          {#if formErrors.phone}
+            <p class="error-msg">{(formErrors.phone).join(', ')}</p>
+          {/if}
         </div>
-      {/if}
 
-      <!-- Nomor Rekening -->
-      <div class="form-group">
-        <label for="account-number">No. Rekening / Nomor E-Wallet <span class="req">*</span></label>
-        <div class="input-wrapper">
-          <input 
-            id="account-number"
-            type="text" 
-            inputmode="numeric"
-            pattern="[0-9]*"
-            placeholder="Contoh: 1234567890" 
-            bind:value={accountNumber}
-            class="form-input"
-          />
-          <span class="input-icon">💳</span>
+        <!-- Gmail -->
+        <div class="form-group">
+          <label for="email-address">Alamat Gmail / Email <span class="req">*</span></label>
+          <div class="input-wrapper">
+            <input
+              id="email-address"
+              type="email"
+              placeholder="nama@gmail.com"
+              bind:value={emailAddress}
+              class="form-input"
+            />
+            <span class="input-icon">✉️</span>
+          </div>
+          {#if formErrors.email}
+            <p class="error-msg">{(formErrors.email).join(', ')}</p>
+          {/if}
         </div>
-        {#if formErrors.account_number}
-          <p class="error-msg">{(formErrors.account_number).join(', ')}</p>
-        {/if}
-      </div>
 
-      <button 
-        type="submit" 
-        disabled={submitting}
-        class="btn-submit"
-      >
-        {#if submitting}
-          <span class="spinner-sm"></span> Mengirim Data...
-        {:else}
-          Kirim Data Verifikasi
+        <!-- Pilihan Bank / E-Wallet -->
+        <div class="form-group">
+          <label for="bank-select">Bank / E-Wallet <span class="req">*</span></label>
+          <select id="bank-select" bind:value={bankName} class="form-select">
+            <option value="" disabled selected>Pilih Bank atau E-Wallet...</option>
+            {#each bankOptions as bank}
+              <option value={bank}>{bank}</option>
+            {/each}
+          </select>
+          {#if formErrors.bank_name}
+            <p class="error-msg">{(formErrors.bank_name).join(', ')}</p>
+          {/if}
+        </div>
+
+        <!-- Input Tambahan Jika Memilih "Lainnya / Bank Lain" -->
+        {#if bankName === 'Lainnya / Bank Lain'}
+          <div class="form-group custom-bank-group">
+            <label for="custom-bank">Nama Bank / E-Wallet Lainnya <span class="req">*</span></label>
+            <div class="input-wrapper">
+              <input
+                id="custom-bank"
+                type="text"
+                placeholder="Contoh: Bank Permata, Seabank, LinkAja..."
+                bind:value={customBankName}
+                class="form-input"
+              />
+              <span class="input-icon">🏛️</span>
+            </div>
+          </div>
         {/if}
-      </button>
-    </form>
+
+        <!-- Nomor Rekening -->
+        <div class="form-group">
+          <label for="account-number">No. Rekening / Nomor E-Wallet <span class="req">*</span></label>
+          <div class="input-wrapper">
+            <input
+              id="account-number"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              placeholder="Contoh: 1234567890"
+              bind:value={accountNumber}
+              class="form-input"
+            />
+            <span class="input-icon">💳</span>
+          </div>
+          {#if formErrors.account_number}
+            <p class="error-msg">{(formErrors.account_number).join(', ')}</p>
+          {/if}
+        </div>
+
+        <!-- Nama Pemegang Rekening -->
+        <div class="form-group">
+          <label for="account-holder-name">Nama Sesuai Rekening / E-Wallet <span class="req">*</span></label>
+          <div class="input-wrapper">
+            <input
+              id="account-holder-name"
+              type="text"
+              placeholder="Nama pemilik rekening, sesuai data bank"
+              bind:value={accountHolderName}
+              class="form-input"
+            />
+            <span class="input-icon">🪪</span>
+          </div>
+          {#if formErrors.account_holder_name}
+            <p class="error-msg">{(formErrors.account_holder_name).join(', ')}</p>
+          {/if}
+        </div>
+
+        <button
+          type="submit"
+          disabled={submitting}
+          class="btn-submit"
+        >
+          {#if submitting}
+            <span class="spinner-sm"></span> Mengirim Data...
+          {:else}
+            {status === 'rejected' ? 'Kirim Ulang Data Verifikasi' : 'Kirim Data Verifikasi'}
+          {/if}
+        </button>
+      </form>
+    {/if}
+  {:else}
+    <div class="success-card">
+      <div class="success-icon">⏳</div>
+      <h3 class="success-title">Memuat status verifikasi...</h3>
+    </div>
   {/if}
 </div>
 
@@ -265,6 +359,16 @@
     flex-direction: column;
     gap: 20px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+
+  .alert-card {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #7f1d1d;
+    font-size: 13px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    line-height: 1.6;
   }
 
   .form-group {
@@ -392,5 +496,35 @@
     to {
       transform: rotate(360deg);
     }
+  }
+
+  /* ---------------- Dark Mode Support ---------------- */
+  :global(body.dark-theme .page-header),
+  :global(body.dark-theme .verification-card),
+  :global(body.dark-theme .success-card) {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  :global(body.dark-theme .page-title),
+  :global(body.dark-theme .success-title) {
+    color: #ffffff !important;
+  }
+  :global(body.dark-theme .page-sub),
+  :global(body.dark-theme .success-sub) {
+    color: #94a3b8 !important;
+  }
+  :global(body.dark-theme .alert-card) {
+    background-color: #450a0a !important;
+    border-color: #7f1d1d !important;
+    color: #fecaca !important;
+  }
+  :global(body.dark-theme .form-input),
+  :global(body.dark-theme .form-select) {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #ffffff !important;
+  }
+  :global(body.dark-theme .form-group label) {
+    color: #cbd5e1 !important;
   }
 </style>

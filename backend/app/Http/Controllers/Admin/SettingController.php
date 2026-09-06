@@ -26,7 +26,10 @@ class SettingController extends Controller
         Setting::set('platform_commission', $request->platform_commission);
         Setting::set('auto_approve_jobs', $request->auto_approve_jobs ? 'true' : 'false');
         Setting::set('maintenance_mode', $request->maintenance_mode ? 'true' : 'false');
-        Setting::set('email_notifications', $request->email_notifications ? 'true' : 'false');
+
+        if ($request->has('email_notifications')) {
+            Setting::set('email_notifications', $request->email_notifications ? 'true' : 'false');
+        }
 
         return response()->json(['message' => 'Settings updated successfully.']);
     }

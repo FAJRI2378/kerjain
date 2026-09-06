@@ -4,58 +4,63 @@
   import { initials } from '$lib/format.js';
   import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
 
-  let pendingList = $state([]);
+  let activeTab = $state('pending');
+  let searchQuery = $state('');
+  let list = $state([]);
   let loading = $state(true);
+  let currentPage = $state(1);
+  let lastPage = $state(1);
+  let searchTimer = $state(null);
 
-  // State Modal Detail & Review Foto
+  // State Modal Detail & Review
   let selectedItem = $state(null);
   let isModalOpen = $state(false);
   let rejectionReason = $state('');
   let isSubmitting = $state(false);
 
-  async function loadPendingVerifications() {
+  const tabs = [
+    { id: 'pending', label: '⏳ Menunggu' },
+    { id: 'approved', label: '✓ Disetujui' },
+    { id: 'rejected', label: '✕ Ditolak' }
+  ];
+
+  async function loadVerifications(page = 1) {
     loading = true;
     try {
-      const res = await api.get('/api/admin/verifications/pending');
-      pendingList = res.data ?? [];
+      const params = new URLSearchParams({ per_page: '12', page: String(page) });
+      if (activeTab) params.set('status', activeTab);
+      if (searchQuery.trim()) params.set('search', searchQuery.trim());
+
+      const res = await api.get(`/api/admin/verifications?${params.toString()}`);
+      list = res.data ?? [];
+      currentPage = res.meta?.current_page ?? page;
+      lastPage = res.meta?.last_page ?? 1;
     } catch (err) {
-      // Data dummy fallback yang disesuaikan dengan struktur file UMKM & Freelancer Anda
-      pendingList = [
-        {
-          id: 1,
-          user_id: 101,
-          name: 'Budi Santoso',
-          email: 'budi@umkmkopi.com',
-          role: 'hirer', // Sesuai file UMKM
-          business_name: 'Kopi Senja Nusantara',
-          category: 'Kuliner / F&B',
-          address: 'Jl. Ahmad Yani No. 45, Bekasi',
-          photo_url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=80',
-          submitted_at: '2026-09-05T10:30:00Z',
-          note: 'Foto tampak depan kedai dan plang nama toko.'
-        },
-        {
-          id: 2,
-          user_id: 102,
-          name: 'Siti Rahmawati',
-          email: 'siti.rahma@gmail.com',
-          role: 'freelancer', // Sesuai file Freelancer
-          business_name: null,
-          category: null,
-          bank_name: 'BCA',
-          account_number: '1234567890',
-          address: 'Jl. Mawar Indah Blok C2, Bandung',
-          photo_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80',
-          submitted_at: '2026-09-04T15:20:00Z',
-          note: 'Verifikasi rekening bank dan data identitas pencairan.'
-        }
-      ];
+      toast(errorMessage(err, 'Gagal memuat data verifikasi.'), 'error');
+      list = [];
     } finally {
       loading = false;
     }
   }
 
-  onMount(loadPendingVerifications);
+  function onSearchChange() {
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      loadVerifications(1);
+    }, 400);
+  }
+
+  function switchTab(tabId) {
+    activeTab = tabId;
+    loadVerifications(1);
+  }
+
+  function goToPage(page) {
+    if (page < 1 || page > lastPage) return;
+    loadVerifications(page);
+  }
+
+  onMount(() => loadVerifications(1));
 
   function openDetailModal(item) {
     selectedItem = item;
@@ -67,13 +72,11 @@
     isSubmitting = true;
     try {
       await api.post(`/api/admin/verifications/${id}/approve`, {});
-      pendingList = pendingList.filter((i) => i.id !== id);
       toast('Verifikasi berhasil disetujui! Status pengguna kini Verified.', 'success');
       isModalOpen = false;
+      loadVerifications(currentPage);
     } catch (err) {
-      pendingList = pendingList.filter((i) => i.id !== id);
-      toast('Verifikasi berhasil disetujui!', 'success');
-      isModalOpen = false;
+      toast(errorMessage(err, 'Gagal menyetujui verifikasi.'), 'error');
     } finally {
       isSubmitting = false;
     }
@@ -88,13 +91,11 @@
     isSubmitting = true;
     try {
       await api.post(`/api/admin/verifications/${id}/reject`, { reason: rejectionReason });
-      pendingList = pendingList.filter((i) => i.id !== id);
       toast('Verifikasi ditolak. Catatan terkirim ke pengguna.', 'info');
       isModalOpen = false;
+      loadVerifications(currentPage);
     } catch (err) {
-      pendingList = pendingList.filter((i) => i.id !== id);
-      toast('Verifikasi ditolak.', 'info');
-      isModalOpen = false;
+      toast(errorMessage(err, 'Gagal menolak verifikasi.'), 'error');
     } finally {
       isSubmitting = false;
     }
@@ -112,22 +113,46 @@
       <p class="text-xs md:text-sm text-slate-400">Validasi foto tempat usaha fisik UMKM atau rekening & data identitas Freelancer.</p>
     </div>
     <div class="text-xs font-semibold text-purple-300 bg-purple-500/10 border border-purple-500/20 px-4 py-2 rounded-xl pending-badge">
-      Antrean Pending: <span class="font-bold text-white badge-count">{pendingList.length}</span>
+      Total Data: <span class="font-bold text-white badge-count">{list.length}</span>
+    </div>
+  </div>
+
+  <!-- Tabs + Search -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div class="flex gap-2 overflow-x-auto tab-row">
+      {#each tabs as tab}
+        <button
+          onclick={() => switchTab(tab.id)}
+          class={`px-4 py-2 rounded-xl text-xs font-bold transition border whitespace-nowrap tab-btn ${activeTab === tab.id ? 'tab-active' : ''}`}
+        >
+          {tab.label}
+        </button>
+      {/each}
+    </div>
+
+    <div class="search-wrap">
+      <input
+        type="text"
+        placeholder="Cari nama / email pengaju..."
+        bind:value={searchQuery}
+        oninput={onSearchChange}
+        class="search-input"
+      />
     </div>
   </div>
 
   <!-- Content List -->
   {#if loading}
-    <div class="text-center py-20 text-slate-500 text-sm">Memuat antrean verifikasi...</div>
-  {:else if pendingList.length === 0}
+    <div class="text-center py-20 text-slate-500 text-sm">Memuat data verifikasi...</div>
+  {:else if list.length === 0}
     <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-12 text-center text-slate-400 space-y-2 empty-card">
-      <p class="text-3xl">🎉</p>
-      <p class="font-bold text-white text-base empty-title">Tidak ada antrean verifikasi!</p>
-      <p class="text-xs text-slate-500">Semua pengajuan telah diperiksa.</p>
+      <p class="text-3xl">🗂️</p>
+      <p class="font-bold text-white text-base empty-title">Tidak ada data verifikasi</p>
+      <p class="text-xs text-slate-500">Belum ada pengajuan dengan status ini.</p>
     </div>
   {:else}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {#each pendingList as item (item.id)}
+      {#each list as item (item.id)}
         <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-xl flex flex-col justify-between verify-card">
           <div>
             <!-- Image Preview Thumbnail -->
@@ -139,6 +164,15 @@
                     <span class="px-2.5 py-1 bg-blue-500/90 text-white font-bold text-[10px] rounded-lg shadow-md">🏢 UMKM Store</span>
                   {:else}
                     <span class="px-2.5 py-1 bg-emerald-500/95 text-slate-950 font-bold text-[10px] rounded-lg shadow-md">🛠️ Freelancer ID</span>
+                  {/if}
+                </div>
+                <div class="absolute top-3 right-3">
+                  {#if item.status === 'approved'}
+                    <span class="px-2.5 py-1 bg-emerald-500/90 text-slate-950 font-bold text-[10px] rounded-lg shadow-md">✓ Disetujui</span>
+                  {:else if item.status === 'rejected'}
+                    <span class="px-2.5 py-1 bg-rose-500/90 text-white font-bold text-[10px] rounded-lg shadow-md">✕ Ditolak</span>
+                  {:else}
+                    <span class="px-2.5 py-1 bg-amber-500/90 text-slate-950 font-bold text-[10px] rounded-lg shadow-md">⏳ Pending</span>
                   {/if}
                 </div>
               </div>
@@ -165,28 +199,50 @@
               {:else}
                 <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/60 space-y-1 text-xs card-detail-box">
                   <p class="text-emerald-400 font-bold">💳 {item.bank_name} - {item.account_number}</p>
-                  <p class="text-slate-400 text-[11px]">Alamat: {item.address}</p>
+                  <p class="text-slate-400 text-[11px]">a.n. {item.account_holder_name}</p>
                 </div>
               {/if}
 
               {#if item.note}
                 <p class="text-[11px] text-slate-500 italic">Catatan: "{item.note}"</p>
               {/if}
+              {#if item.status === 'rejected' && item.admin_note}
+                <p class="text-[11px] text-rose-400 italic">Alasan: "{item.admin_note}"</p>
+              {/if}
             </div>
           </div>
 
           <!-- Action Button -->
           <div class="p-5 pt-0">
-            <button 
+            <button
               onclick={() => openDetailModal(item)}
               class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-purple-600/20"
             >
-              🔍 Periksa Data & Validasi
+              🔍 Periksa Data
             </button>
           </div>
         </div>
       {/each}
     </div>
+
+    <!-- Pagination -->
+    {#if lastPage > 1}
+      <div class="flex items-center justify-center gap-3 pt-2 pagination-row">
+        <button
+          class="page-nav"
+          disabled={currentPage <= 1}
+          onclick={() => goToPage(currentPage - 1)}
+        >← Sebelumnya</button>
+        <span class="text-xs font-semibold text-slate-400">
+          Halaman <span class="text-white font-bold">{currentPage}</span> / {lastPage}
+        </span>
+        <button
+          class="page-nav"
+          disabled={currentPage >= lastPage}
+          onclick={() => goToPage(currentPage + 1)}
+        >Berikutnya →</button>
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -196,13 +252,14 @@
     <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl p-6 space-y-6 max-h-[90vh] overflow-y-auto modal-content-card">
       <div class="flex justify-between items-start border-b border-slate-800 pb-4 modal-header-box">
         <div>
-          <h2 class="text-lg font-black text-white modal-title-text">Validasi Pengajuan {selectedItem.role === 'hirer' ? 'UMKM' : 'Freelancer'}</h2>
-          <p class="text-xs text-slate-400">Pastikan data dan dokumen memenuhi standar platform Kerjain.</p>
+          <h2 class="text-lg font-black text-white modal-title-text">Detail Pengajuan {selectedItem.role === 'hirer' ? 'UMKM' : 'Freelancer'}</h2>
+          <p class="text-xs text-slate-400">
+            Status: {selectedItem.status === 'approved' ? '✓ Disetujui' : selectedItem.status === 'rejected' ? '✕ Ditolak' : '⏳ Menunggu Review'}
+          </p>
         </div>
         <button onclick={() => isModalOpen = false} class="text-slate-400 hover:text-white text-lg font-bold btn-modal-close">✕</button>
       </div>
 
-      <!-- Preview Image / Data Details -->
       <div class="space-y-4">
         {#if selectedItem.photo_url}
           <div class="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 max-h-[300px] flex items-center justify-center modal-img-preview">
@@ -219,56 +276,63 @@
             <p>Alamat Toko: <span class="text-white font-semibold modal-info-val">{selectedItem.address}</span></p>
           {:else}
             <p>Rekening Bank/E-Wallet: <span class="text-emerald-400 font-bold">{selectedItem.bank_name} - {selectedItem.account_number}</span></p>
+            <p>a.n. <span class="text-emerald-400 font-bold">{selectedItem.account_holder_name}</span></p>
+          {/if}
+          {#if selectedItem.status === 'rejected' && selectedItem.admin_note}
+            <p>Alasan Penolakan: <span class="text-rose-400 font-semibold">{selectedItem.admin_note}</span></p>
           {/if}
         </div>
 
-        <!-- Panduan Pengecekan -->
-        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 info-box-light">
-          <p class="text-xs font-bold text-slate-300 uppercase tracking-wider modal-info-heading">Panduan Pengecekan Admin:</p>
-          <ul class="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-            {#if selectedItem.role === 'hirer'}
-              <li>Foto menunjukkan bagian depan toko fisik atau plang usaha UMKM secara jelas.</li>
-              <li>Nama dan alamat toko sesuai dengan data pendaftaran profil usaha.</li>
-            {:else}
-              <li>Nomor rekening dan nama bank valid untuk kelancaran pencairan escrow.</li>
-              <li>Identitas akun sesuai dengan data diri pendaftar.</li>
-            {/if}
-          </ul>
-        </div>
+        {#if selectedItem.status === 'pending'}
+          <!-- Panduan Pengecekan -->
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 info-box-light">
+            <p class="text-xs font-bold text-slate-300 uppercase tracking-wider modal-info-heading">Panduan Pengecekan Admin:</p>
+            <ul class="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
+              {#if selectedItem.role === 'hirer'}
+                <li>Foto menunjukkan bagian depan toko fisik atau plang usaha UMKM secara jelas.</li>
+                <li>Nama dan alamat toko sesuai dengan data pendaftaran profil usaha.</li>
+              {:else}
+                <li>Nomor rekening dan nama bank valid untuk kelancaran pencairan escrow.</li>
+                <li>Identitas akun sesuai dengan data diri pendaftar.</li>
+              {/if}
+            </ul>
+          </div>
 
-        <!-- Form Alasan Penolakan -->
-        <div class="space-y-2">
-          <label for="reject-reason" class="text-xs font-bold text-slate-300 label-reject">Catatan / Alasan Penolakan <span class="text-slate-500 font-normal">(Wajib diisi jika menolak)</span></label>
-          <textarea 
-            id="reject-reason"
-            rows="2" 
-            bind:value={rejectionReason} 
-            placeholder="Contoh: Foto toko terlalu gelap / nomor rekening tidak valid. Mohon perbarui." 
-            class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 rejection-textarea"
-          ></textarea>
-        </div>
+          <!-- Form Alasan Penolakan -->
+          <div class="space-y-2">
+            <label for="reject-reason" class="text-xs font-bold text-slate-300 label-reject">Catatan / Alasan Penolakan <span class="text-slate-500 font-normal">(Wajib diisi jika menolak)</span></label>
+            <textarea
+              id="reject-reason"
+              rows="2"
+              bind:value={rejectionReason}
+              placeholder="Contoh: Foto toko terlalu gelap / nomor rekening tidak valid. Mohon perbarui."
+              class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 rejection-textarea"
+            ></textarea>
+          </div>
+        {/if}
       </div>
 
-      <!-- Action Buttons -->
-      <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800 modal-footer-box">
-        <button 
-          type="button"
-          disabled={isSubmitting}
-          onclick={() => handleReject(selectedItem.id)}
-          class="px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 text-xs font-bold rounded-xl transition"
-        >
-          {isSubmitting ? 'Memproses...' : 'Tolak Verifikasi'}
-        </button>
+      {#if selectedItem.status === 'pending'}
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800 modal-footer-box">
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onclick={() => handleReject(selectedItem.id)}
+            class="px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 text-xs font-bold rounded-xl transition"
+          >
+            {isSubmitting ? 'Memproses...' : 'Tolak Verifikasi'}
+          </button>
 
-        <button 
-          type="button"
-          disabled={isSubmitting}
-          onclick={() => handleApprove(selectedItem.id)}
-          class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold rounded-xl transition shadow-lg shadow-emerald-500/10"
-        >
-          {isSubmitting ? 'Memproses...' : 'Setujui (Verify ✓)'}
-        </button>
-      </div>
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onclick={() => handleApprove(selectedItem.id)}
+            class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold rounded-xl transition shadow-lg shadow-emerald-500/10"
+          >
+            {isSubmitting ? 'Memproses...' : 'Setujui (Verify ✓)'}
+          </button>
+        </div>
+      {/if}
     </div>
   </div>
 {/if}
@@ -329,6 +393,29 @@
     color: #1e293b !important;
   }
 
+  :global(body:not(.dark-theme)) .search-input {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+
+  :global(body:not(.dark-theme)) .tab-btn {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #475569 !important;
+  }
+  :global(body:not(.dark-theme)) .tab-btn.tab-active {
+    background-color: #0d233a !important;
+    border-color: #0d233a !important;
+    color: #ffffff !important;
+  }
+
+  :global(body:not(.dark-theme)) .page-nav {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+  }
+
   /* Modal Light Theme Overrides */
   :global(body:not(.dark-theme)) .modal-backdrop-box {
     background-color: rgba(15, 23, 42, 0.5) !important;
@@ -379,5 +466,75 @@
 
   :global(body:not(.dark-theme)) .rejection-textarea::placeholder {
     color: #94a3b8 !important;
+  }
+
+  /* Tabs + Search */
+  .tab-row {
+    flex-shrink: 0;
+  }
+
+  .tab-btn {
+    background-color: rgba(51, 65, 85, 0.4);
+    border: 1px solid #334155;
+    color: #cbd5e1;
+  }
+
+  .tab-btn:hover {
+    border-color: #7c3aed;
+    color: #c4b5fd;
+  }
+
+  .tab-btn.tab-active {
+    background-color: #7c3aed;
+    border-color: #7c3aed;
+    color: #ffffff;
+  }
+
+  .search-wrap {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 14px;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    font-size: 12.5px;
+    color: #ffffff;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input::placeholder {
+    color: #64748b;
+  }
+
+  .search-input:focus {
+    border-color: #7c3aed;
+  }
+
+  /* Pagination */
+  .page-nav {
+    padding: 8px 16px;
+    background-color: rgba(51, 65, 85, 0.3);
+    border: 1px solid #334155;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .page-nav:hover:not(:disabled) {
+    border-color: #7c3aed;
+    color: #c4b5fd;
+  }
+
+  .page-nav:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 </style>

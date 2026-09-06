@@ -34,6 +34,21 @@ class User extends Authenticatable
         return $this->hasOne(BusinessProfile::class);
     }
 
+    public function verification(): HasOne
+    {
+        return $this->hasOne(Verification::class)->latest('id');
+    }
+
+    public function verifications(): HasMany
+    {
+        return $this->hasMany(Verification::class);
+    }
+
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
     public function ownedTasks(): HasMany
     {
         return $this->hasMany(Task::class, 'owner_id');

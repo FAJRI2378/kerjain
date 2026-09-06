@@ -1,19 +1,37 @@
 <script>
   import { onMount } from 'svelte';
+  import { api, getBlobUrl } from '$lib/api/client.js';
   import { formatRupiah } from '$lib/format.js';
-  import { toast } from '$lib/ui/toast.svelte.js';
+  import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
 
-  // Data Dummy Invoice & Rekap Pengeluaran Escrow
-  let invoices = $state([
-    { id: 'INV-2026-001', task: 'Desain Logo UMKM Kopi Senja', worker: 'Ahmad Rizki', amount: 350000, date: '04 Sep 2026', status: 'Lunas (Escrow Released)' },
-    { id: 'INV-2026-002', task: 'Admin Medsos Instagram', worker: 'Siti Aminah', amount: 1200000, date: '28 Agu 2026', status: 'Lunas (Escrow Released)' },
-    { id: 'INV-2026-003', task: 'Input Data Tokopedia', worker: 'Budi Santoso', amount: 150000, date: '15 Agu 2026', status: 'Lunas (Escrow Released)' }
-  ]);
+  let invoices = $state([]);
+
+  async function loadInvoices() {
+    try {
+      const res = await api.get('/api/hire/invoices');
+      invoices = res.data.invoices ?? [];
+    } catch (err) {
+      toast(errorMessage(err, 'Gagal memuat invoice.'), 'error');
+    }
+  }
+
+  onMount(loadInvoices);
 
   let totalSpent = $derived(invoices.reduce((sum, inv) => sum + inv.amount, 0));
 
-  function downloadInvoice(invId) {
-    toast(`Mengunduh kuitansi resmi ${invId} dalam format PDF...`, 'success');
+  async function downloadInvoice(inv) {
+    try {
+      const url = await getBlobUrl(`/api/invoices/${inv.id}/pdf`);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${inv.number ?? `INV-${inv.id}`}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    } catch (err) {
+      toast(errorMessage(err, 'Gagal mengunduh invoice.'), 'error');
+    }
   }
 </script>
 
@@ -35,7 +53,7 @@
       {#each invoices as inv (inv.id)}
         <div class="invoice-item">
           <div class="inv-info">
-            <span class="inv-id">{inv.id}</span>
+            <span class="inv-id">{inv.number}</span>
             <h4 class="inv-task">{inv.task}</h4>
             <p class="inv-meta">Freelancer: <strong>{inv.worker}</strong> • Tanggal: {inv.date}</p>
           </div>
@@ -45,7 +63,7 @@
               <span class="inv-amount">{formatRupiah(inv.amount)}</span>
               <span class="inv-status">✅ {inv.status}</span>
             </div>
-            <button onclick={() => downloadInvoice(inv.id)} class="btn-download">
+            <button onclick={() => downloadInvoice(inv)} class="btn-download">
               📥 Unduh PDF
             </button>
           </div>

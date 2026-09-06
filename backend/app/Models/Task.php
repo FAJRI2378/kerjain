@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Task extends Model
 {
@@ -30,6 +31,9 @@ class Task extends Model
         'location',
         'status',
         'proof_url',
+        'proof_image',
+        'rejection_reason',
+        'revision_note',
         'deadline',
     ];
 
@@ -68,6 +72,11 @@ class Task extends Model
     public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class, 'task_id');
+    }
+
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class, 'task_id');
     }
 
     public function scopeApproved(Builder $query): Builder

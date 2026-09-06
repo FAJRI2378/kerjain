@@ -43,7 +43,7 @@ class AcceptApplicationTest extends TestCase
         ]);
 
         $this->actingAs($hirer, 'sanctum')
-            ->postJson("/api/tasks/{$task->id}/applications/{$application->id}/accept")
+            ->postJson("/api/hire/applicants/{$application->id}/accept")
             ->assertOk()
             ->assertJsonPath('message', 'Worker assigned successfully.');
 
@@ -71,7 +71,7 @@ class AcceptApplicationTest extends TestCase
         $rejected = TaskApplication::create(['task_id' => $task->id, 'worker_id' => User::factory()->freelancer()->create()->id, 'status' => 'pending']);
 
         $this->actingAs($hirer, 'sanctum')
-            ->postJson("/api/tasks/{$task->id}/applications/{$accepted->id}/accept");
+            ->postJson("/api/hire/applicants/{$accepted->id}/accept");
 
         $this->assertDatabaseHas('task_applications', [
             'id' => $rejected->id,
@@ -93,7 +93,7 @@ class AcceptApplicationTest extends TestCase
         ]);
 
         $this->actingAs($this->hirer(), 'sanctum')
-            ->postJson("/api/tasks/{$task->id}/applications/{$application->id}/accept")
+            ->postJson("/api/hire/applicants/{$application->id}/accept")
             ->assertStatus(403);
     }
 
@@ -111,7 +111,7 @@ class AcceptApplicationTest extends TestCase
         ]);
 
         $this->actingAs($hirer, 'sanctum')
-            ->postJson("/api/tasks/{$task->id}/applications/{$application->id}/reject")
+            ->postJson("/api/hire/applicants/{$application->id}/reject")
             ->assertOk()
             ->assertJsonPath('message', 'Application rejected.');
 
@@ -131,9 +131,10 @@ class AcceptApplicationTest extends TestCase
         TaskApplication::create(['task_id' => $task->id, 'worker_id' => $this->worker()->id, 'status' => 'pending']);
 
         $this->actingAs($hirer, 'sanctum')
-            ->getJson("/api/tasks/{$task->id}/applicants")
+            ->getJson("/api/hire/jobs/{$task->id}/applicants")
             ->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.status', 'pending');
+            ->assertJsonCount(1, 'data.applicants')
+            ->assertJsonPath('data.applicants.0.status', 'pending')
+            ->assertJsonPath('data.job.id', $task->id);
     }
 }

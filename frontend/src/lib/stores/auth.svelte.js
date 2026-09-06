@@ -74,6 +74,14 @@ function createAuth() {
 		setSession(null, null);
 	}
 
+	async function updateProfile(formData) {
+		const data = await api.post('/api/profile', formData);
+		if (data?.user) {
+			setSession(data.user, token);
+		}
+		return data;
+	}
+
 	const me = $derived(user);
 
 	return {
@@ -96,7 +104,8 @@ function createAuth() {
 		hydrate,
 		login,
 		register,
-		logout
+		logout,
+		updateProfile
 	};
 }
 

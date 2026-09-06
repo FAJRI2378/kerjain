@@ -15,12 +15,49 @@ class CreateTaskTest extends TestCase
 
     private function hirer(): User
     {
-        return User::factory()->hirer()->create();
+        return User::factory()->hirer()->verified()->create();
     }
 
     private function category(): JobCategory
     {
         return JobCategory::create(['name' => 'Pemasaran', 'slug' => 'pemasaran']);
+    }
+
+    public function test_unverified_hirer_cannot_create_task(): void
+    {
+        $hirer = User::factory()->hirer()->create(['is_verified' => false]);
+
+        $this->actingAs($hirer, 'sanctum')
+            ->postJson('/api/tasks', [
+                'title' => 'Jasa Sebar Brosur',
+                'category' => $this->category()->slug,
+                'location' => 'Jakarta Selatan',
+                'budget' => 150000,
+                'description' => 'Sebar brosur promo toko.',
+            ])
+            ->assertStatus(403)
+            ->assertJsonValidationErrors('verification');
+
+        $this->assertDatabaseCount('tasks', 0);
+    }
+
+    public function test_create_task_requires_phone_in_profile(): void
+    {
+        $hirer = User::factory()->hirer()->verified()->create(['phone' => null]);
+        $category = $this->category();
+
+        $this->actingAs($hirer, 'sanctum')
+            ->postJson('/api/tasks', [
+                'title' => 'Jasa Sebar Brosur',
+                'category' => $category->slug,
+                'location' => 'Jakarta Selatan',
+                'budget' => 150000,
+                'description' => 'Sebar brosur promo toko.',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('phone');
+
+        $this->assertDatabaseCount('tasks', 0);
     }
 
     public function test_hirer_can_create_task(): void

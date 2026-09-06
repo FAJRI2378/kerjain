@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Freelancer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Freelancer\VerificationRequest;
-use Illuminate\Http\Request;
+use App\Models\Verification;
 
 class VerificationController extends Controller
 {
@@ -13,12 +13,29 @@ class VerificationController extends Controller
         $user = $request->user();
 
         $user->update([
-            'phone' => $request->get('phone', $user->phone),
+            'phone' => $request->input('phone', $user->phone),
+            'email' => $request->input('email', $user->email),
             'is_verified' => false,
         ]);
 
+        Verification::updateOrCreate(
+            ['user_id' => $user->id, 'status' => 'pending'],
+            [
+                'role' => 'freelancer',
+                'status' => 'pending',
+                'data' => [
+                    'bank_name' => $request->bank_name,
+                    'account_number' => $request->account_number,
+                    'account_holder_name' => $request->account_holder_name,
+                    'phone' => $user->phone,
+                    'email' => $user->email,
+                    'note' => 'Verifikasi rekening bank dan data identitas pencairan.',
+                ],
+            ]
+        );
+
         return response()->json([
-            'message' => 'Dokumen KTP berhasil dikirim! Verifikasi sedang diproses.',
+            'message' => 'Data verifikasi berhasil dikirim! Verifikasi sedang diproses.',
         ]);
     }
 }

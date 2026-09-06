@@ -8,6 +8,7 @@ use App\Http\Resources\TaskApplicationResource;
 use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class JobController extends Controller
 {
@@ -34,18 +35,26 @@ class JobController extends Controller
         return TaskResource::collection($tasks);
     }
 
-    public function show(Task $task)
+    public function show(Request $request, Task $task)
     {
-        abort_unless($task->status === 'approved', 404);
+        $user = $request->user();
 
-        return new TaskResource($task->load(['owner', 'category', 'worker']));
+        $isAdmin = $user->role === 'admin';
+        $isOwner = $task->owner_id === $user->id;
+        $isWorker = $task->worker_id === $user->id;
+        $hasApplied = $task->applications()->where('worker_id', $user->id)->exists();
+
+        if (!$isAdmin && !$isOwner && !$isWorker && !$hasApplied && $task->status !== 'approved') {
+            abort(404);
+        }
+
+        return new TaskResource($task->load(['owner', 'category', 'worker', 'invoice'])->loadCount('applicants'));
     }
 
     public function mine(Request $request)
     {
         $tasks = Task::where('worker_id', $request->user()->id)
-            ->whereNotIn('status', ['completed', 'cancelled'])
-            ->with(['owner', 'category'])
+            ->with(['owner', 'category', 'invoice'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -58,6 +67,20 @@ class JobController extends Controller
 
         if ($user->role !== 'freelancer') {
             return response()->json(['message' => 'Only freelancers can apply to tasks.'], 403);
+        }
+
+        if (! $user->is_verified) {
+            return response()->json([
+                'message' => 'Verifikasi akun Anda terlebih dahulu untuk melamar pekerjaan.',
+                'errors' => ['verification' => ['Akun Anda belum terverifikasi. Silakan selesaikan verifikasi identitas terlebih dahulu.']],
+            ], 403);
+        }
+
+        if (! $user->phone) {
+            return response()->json([
+                'message' => 'Lengkapi nomor WhatsApp di profil sebelum melamar.',
+                'errors' => ['phone' => ['Nomor WhatsApp wajib diisi pada profil terlebih dahulu.']],
+            ], 422);
         }
 
         if ($task->owner_id === $user->id) {
@@ -94,11 +117,38 @@ class JobController extends Controller
             return response()->json(['message' => 'This task is not in progress.'], 409);
         }
 
+        $proofImage = null;
+        if ($request->hasFile('proof')) {
+            $proofImage = $request->file('proof')->store('proofs/' . $task->id, 'public');
+        }
+
         $task->update([
-            'proof_url' => $request->proof_url,
+            'proof_url' => $request->filled('proof_url') ? $request->proof_url : null,
+            'proof_image' => $proofImage,
+            'revision_note' => null,
             'status' => 'reviewing',
         ]);
 
-        return new TaskResource($task->fresh(['owner', 'category', 'worker']));
+        return new TaskResource($task->fresh(['owner', 'category', 'worker', 'invoice']));
+    }
+
+    public function proofImage(Request $request, Task $task)
+    {
+        $user = $request->user();
+
+        $isAdmin = $user->role === 'admin';
+        $isOwner = $task->owner_id === $user->id;
+        $isWorker = $task->worker_id === $user->id;
+        $hasApplied = $task->applications()->where('worker_id', $user->id)->exists();
+
+        if (!$isAdmin && !$isOwner && !$isWorker && !$hasApplied && $task->status !== 'approved') {
+            abort(404);
+        }
+
+        if (!$task->proof_image || !Storage::disk('public')->exists($task->proof_image)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->response($task->proof_image);
     }
 }

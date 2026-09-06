@@ -14,10 +14,10 @@ class SettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'platform_commission' => ['required', 'integer', 'min:0', 'max:50'],
-            'auto_approve_jobs' => ['required', 'boolean'],
-            'maintenance_mode' => ['required', 'boolean'],
-            'email_notifications' => ['required', 'boolean'],
+            'platform_commission' => ['sometimes', 'integer', 'min:0', 'max:50'],
+            'auto_approve_jobs' => ['sometimes', 'boolean'],
+            'maintenance_mode' => ['sometimes', 'boolean'],
+            'email_notifications' => ['sometimes', 'boolean'],
         ];
     }
 }

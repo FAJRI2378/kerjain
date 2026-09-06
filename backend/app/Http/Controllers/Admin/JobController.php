@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\RejectTaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use Illuminate\Http\Request;
@@ -42,13 +43,16 @@ class JobController extends Controller
         return response()->json(['message' => 'Task approved successfully.']);
     }
 
-    public function reject(Task $task)
+    public function reject(RejectTaskRequest $request, Task $task)
     {
         if ($task->status !== 'pending') {
             return response()->json(['message' => 'Only pending tasks can be rejected.'], 409);
         }
 
-        $task->update(['status' => 'rejected']);
+        $task->update([
+            'status' => 'rejected',
+            'rejection_reason' => $request->reason,
+        ]);
 
         return response()->json(['message' => 'Task rejected successfully.']);
     }

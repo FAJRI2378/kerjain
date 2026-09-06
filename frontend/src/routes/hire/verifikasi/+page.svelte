@@ -4,29 +4,46 @@
   import { api } from '$lib/api/client.js';
   import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
 
-  // State Verifikasi Usaha
+  // State form verifikasi usaha
   let businessName = $state('');
   let businessAddress = $state('');
   let businessType = $state('Kuliner / F&B');
   let ownerName = $state('');
   let phone = $state('');
-  
+
   let storePhotoPreview = $state('');
   let storePhotoFile = $state(null);
   let isSubmitting = $state(false);
-  let verificationStatus = $state('verified'); // 'verified', 'pending', 'unverified'
+  let loading = $state(true);
 
-  onMount(() => {
+  let verification = $state(null);
+  let isVerified = $derived(!!auth.user?.is_verified);
+
+  const status = $derived(verification?.status ?? null);
+
+  onMount(async () => {
     if (!auth.hydrated) auth.hydrate();
+    await loadStatus();
     if (auth.user) {
       businessName = auth.user.business_profile?.business_name || auth.user.name || '';
       businessAddress = auth.user.business_profile?.address || auth.user.address || '';
-      businessType = auth.user.business_profile?.business_type || 'Kuliner / F&B';
+      businessType = auth.user.business_profile?.business_type || businessType;
       ownerName = auth.user.name || '';
       phone = auth.user.phone || '';
       storePhotoPreview = auth.user.business_profile?.store_photo_url || auth.user.store_photo || '';
     }
   });
+
+  async function loadStatus() {
+    try {
+      const res = await api.get('/api/verification/status');
+      verification = res.data ?? null;
+    } catch {
+      verification = null;
+    } finally {
+      loading = false;
+    }
+  }
 
   function handleStorePhotoChange(e) {
     const file = e.target.files[0];
@@ -36,30 +53,32 @@
     }
   }
 
-  async function handleSaveVerification(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+
+    if (!storePhotoFile) {
+      toast('Harap pilih foto toko terlebih dahulu.', 'error');
+      return;
+    }
+
     isSubmitting = true;
 
     try {
       const formData = new FormData();
       formData.append('business_name', businessName);
-      formData.append('business_address', businessAddress);
       formData.append('business_type', businessType);
-      formData.append('name', ownerName);
+      formData.append('address', businessAddress);
       formData.append('phone', phone);
+      formData.append('name', ownerName);
+      formData.append('store_photo', storePhotoFile);
 
-      if (storePhotoFile) {
-        formData.append('store_photo', storePhotoFile);
-      }
-
-      if (auth.updateProfile) {
-        await auth.updateProfile(formData);
-      }
-
-      verificationStatus = 'pending';
+      await api.post('/api/hire/verification', formData);
       toast('Data & foto tempat dagang berhasil dikirim untuk verifikasi!', 'success');
+      storePhotoFile = null;
+      storePhotoPreview = '';
+      await loadStatus();
     } catch (err) {
-      toast(errorMessage(err, 'Gagal menyimpan data verifikasi.'), 'error');
+      toast(errorMessage(err, 'Gagal mengirim data verifikasi.'), 'error');
     } finally {
       isSubmitting = false;
     }
@@ -69,115 +88,139 @@
 <div class="verifikasi-page font-sans">
   <div class="page-header">
     <div>
-      <h1 class="page-title">Verifikasi & Profil Tempat Usaha 🏪</h1>
-      <p class="page-sub">Lengkapi alamat dagang dan foto tempat usaha fisik Anda untuk mendapatkan lencana Escrow Verified.</p>
+      <h1 class="page-title">Verifikasi Tempat Usaha 🏪</h1>
+      <p class="page-sub">Kirim data & foto tempat usaha fisik Anda untuk mendapatkan lencana Escrow Verified dan bisa posting tugas.</p>
     </div>
-    <div class="status-badge-container">
-      {#if verificationStatus === 'verified'}
-        <span class="badge badge-green">🛡️ Escrow Verified</span>
-      {:else if verificationStatus === 'pending'}
-        <span class="badge badge-amber">⏳ Menunggu Review Admin</span>
-      {:else}
-        <span class="badge badge-red">⚠️ Belum Terverifikasi</span>
-      {/if}
-    </div>
-  </div>
-
-  <form onsubmit={handleSaveVerification} class="card form-card">
-    <!-- Upload Foto Tempat Dagang -->
-    <div class="photo-upload-container">
-      <div class="photo-preview-box">
-        {#if storePhotoPreview}
-          <img src={storePhotoPreview} alt="Tempat Dagang" class="store-img" />
+    {#if !loading}
+      <div class="status-badge-container">
+        {#if isVerified}
+          <span class="badge badge-green">🛡️ Escrow Verified</span>
+        {:else if status === 'pending'}
+          <span class="badge badge-amber">⏳ Menunggu Review Admin</span>
+        {:else if status === 'rejected'}
+          <span class="badge badge-red">✕ Ditolak Admin</span>
         {:else}
-          <div class="photo-placeholder">
-            <span>📷</span>
-            <p>Belum ada foto</p>
-          </div>
+          <span class="badge badge-red">⚠️ Belum Terverifikasi</span>
         {/if}
       </div>
-      <div class="photo-instruction">
-        <h3 class="section-label">Foto Tempat Usaha / Toko Fisik</h3>
-        <p class="section-tip">Unggah foto bagian depan toko, gerobak, atau tempat usaha Anda agar freelancer lebih percaya.</p>
-        <label for="store-photo-input" class="btn-upload">
-          Pilih Foto Toko (JPG/PNG)
-        </label>
-        <input 
-          id="store-photo-input" 
-          type="file" 
-          accept="image/png, image/jpeg, image/jpg" 
-          onchange={handleStorePhotoChange} 
-          class="hidden-input" 
-        />
-      </div>
-    </div>
+    {/if}
+  </div>
 
-    <div class="form-grid">
-      <div class="form-group">
-        <label for="biz-name">Nama Usaha / Toko</label>
-        <input 
-          id="biz-name" 
-          type="text" 
-          bind:value={businessName} 
+  {#if isVerified}
+    <div class="card status-card">
+      <h3 class="room-kicker">Akun Anda Sudah Terverifikasi ✓</h3>
+      <p class="room-title">Anda dapat memposting tugas untuk pekerja di sekitar usaha Anda.</p>
+    </div>
+  {:else}
+    {#if status === 'rejected'}
+      <div class="card alert-card">
+        <p class="alert-text">
+          ⚠️ Pengajuan sebelumnya <strong>ditolak</strong>:
+          <em>"{verification?.admin_note || 'Data kurang lengkap.'}"</em>
+          Silakan perbaiki data dan unggah ulang foto, lalu ajukan kembali.
+        </p>
+      </div>
+    {/if}
+
+    <form onsubmit={handleSubmit} class="card form-card">
+      <!-- Upload Foto Tempat Dagang -->
+      <div class="photo-upload-container">
+        <div class="photo-preview-box">
+          {#if storePhotoPreview}
+            <img src={storePhotoPreview} alt="Tempat Dagang" class="store-img" />
+          {:else}
+            <div class="photo-placeholder">
+              <span>📷</span>
+              <p>Belum ada foto</p>
+            </div>
+          {/if}
+        </div>
+        <div class="photo-instruction">
+          <h3 class="section-label">Foto Tempat Usaha / Toko Fisik (wajib)</h3>
+          <p class="section-tip">Unggah foto bagian depan toko, gerobak, atau tempat usaha Anda agar freelancer lebih percaya dan verifikasi lebih cepat.</p>
+          <label for="store-photo-input" class="btn-upload">
+            Pilih Foto Toko (JPG/PNG)
+          </label>
+          <input 
+            id="store-photo-input" 
+            type="file" 
+            accept="image/png, image/jpeg, image/jpg, image/webp" 
+            onchange={handleStorePhotoChange} 
+            class="hidden-input"
+          />
+          {#if status === 'pending'}
+            <p class="pending-tip">Menunggu review admin (maks. 1×24 jam). Anda bisa mengubah data & mengirim ulang jika ada revisi.</p>
+          {/if}
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="biz-name">Nama Usaha / Toko</label>
+          <input 
+            id="biz-name" 
+            type="text" 
+            bind:value={businessName} 
+            required 
+            placeholder="Contoh: Soto Pak Budi" 
+            class="form-input" 
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="biz-type">Kategori Sektor Usaha</label>
+          <select id="biz-type" bind:value={businessType} class="form-input">
+            <option value="Kuliner / F&B">Kuliner / F&B (Resto, Cafe, Kedai)</option>
+            <option value="Retail & Toko Kelontong">Retail & Toko Kelontong</option>
+            <option value="Fashion & Konveksi">Fashion & Konveksi</option>
+            <option value="Jasa & Lainnya">Jasa & Lainnya</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="owner-name">Nama Pemilik / PIC</label>
+          <input 
+            id="owner-name" 
+            type="text" 
+            bind:value={ownerName} 
+            required 
+            placeholder="Nama lengkap Anda" 
+            class="form-input" 
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Nomor WhatsApp Bisnis</label>
+          <input 
+            id="phone" 
+            type="tel" 
+            bind:value={phone} 
+            required 
+            placeholder="Contoh: 081234567890" 
+            class="form-input" 
+          />
+        </div>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="biz-address">Alamat Lengkap Tempat Dagang / Operasional</label>
+        <textarea 
+          id="biz-address" 
+          rows="3" 
+          bind:value={businessAddress} 
           required 
-          placeholder="Contoh: Kopi Kenangan Senja" 
-          class="form-input" 
-        />
+          placeholder="Contoh: Jl. Sudirman No. 45, Kel. Menteng, Jakarta Pusat..." 
+          class="form-input textarea"
+        ></textarea>
       </div>
 
-      <div class="form-group">
-        <label for="biz-type">Kategori Sektor Usaha</label>
-        <select id="biz-type" bind:value={businessType} class="form-input">
-          <option value="Kuliner / F&B">Kuliner / F&B (Resto, Cafe, Kedai)</option>
-          <option value="Retail & Toko Kelontong">Retail & Toko Kelontong</option>
-          <option value="Fashion & Konveksi">Fashion & Konveksi</option>
-          <option value="Jasa & Lainnya">Jasa & Lainnya</option>
-        </select>
+      <div class="form-actions">
+        <button type="submit" disabled={isSubmitting} class="btn-submit">
+          {isSubmitting ? 'Mengirim Verifikasi...' : status === 'rejected' ? 'Ajukan Ulang Verifikasi Usaha' : 'Simpan & Ajukan Verifikasi Usaha'}
+        </button>
       </div>
-
-      <div class="form-group">
-        <label for="owner-name">Nama Pemilik / PIC</label>
-        <input 
-          id="owner-name" 
-          type="text" 
-          bind:value={ownerName} 
-          required 
-          placeholder="Nama lengkap Anda" 
-          class="form-input" 
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="phone">Nomor WhatsApp Bisnis</label>
-        <input 
-          id="phone" 
-          type="tel" 
-          bind:value={phone} 
-          required 
-          placeholder="Contoh: 081234567890" 
-          class="form-input" 
-        />
-      </div>
-    </div>
-
-    <div class="form-group full-width">
-      <label for="biz-address">Alamat Lengkap Tempat Dagang / Operasional</label>
-      <textarea 
-        id="biz-address" 
-        rows="3" 
-        bind:value={businessAddress} 
-        required 
-        placeholder="Contoh: Jl. Sudirman No. 45, Kel. Menteng, Jakarta Pusat..." 
-        class="form-input textarea"
-      ></textarea>
-    </div>
-
-    <div class="form-actions">
-      <button type="submit" disabled={isSubmitting} class="btn-submit">
-        {isSubmitting ? 'Mengirim Verifikasi...' : 'Simpan & Ajukan Verifikasi Usaha'}
-      </button>
-    </div>
-  </form>
+    </form>
+  {/if}
 </div>
 
 <style>
@@ -245,6 +288,37 @@
     transition: background-color 0.3s ease, border-color 0.3s ease;
   }
 
+  .status-card {
+    text-align: center;
+    padding: 48px 28px;
+  }
+
+  .room-kicker {
+    font-size: 20px;
+    font-weight: 800;
+    color: #166534;
+    margin: 0 0 8px;
+  }
+
+  .room-title {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .alert-card {
+    border-color: #fecaca;
+    background: #fef2f2;
+    padding: 20px 24px;
+  }
+
+  .alert-text {
+    font-size: 13px;
+    color: #7f1d1d;
+    margin: 0;
+    line-height: 1.6;
+  }
+
   .form-card {
     display: flex;
     flex-direction: column;
@@ -310,6 +384,13 @@
     font-size: 12.5px;
     color: #64748b;
     margin: 0 0 12px;
+  }
+
+  .pending-tip {
+    font-size: 12px;
+    font-weight: 600;
+    color: #b45309;
+    margin: 12px 0 0;
   }
 
   .btn-upload {
@@ -420,8 +501,19 @@
   }
   :global(body.dark-theme .page-sub),
   :global(body.dark-theme .section-tip),
-  :global(body.dark-theme .photo-placeholder) {
+  :global(body.dark-theme .photo-placeholder),
+  :global(body.dark-theme .room-title) {
     color: #94a3b8 !important;
+  }
+  :global(body.dark-theme .room-kicker) {
+    color: #4ade80 !important;
+  }
+  :global(body.dark-theme .alert-card) {
+    background-color: #450a0a !important;
+    border-color: #7f1d1d !important;
+  }
+  :global(body.dark-theme .alert-text) {
+    color: #fecaca !important;
   }
   :global(body.dark-theme .form-group label) {
     color: #cbd5e1 !important;

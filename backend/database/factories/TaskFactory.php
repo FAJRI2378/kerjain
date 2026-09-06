@@ -26,6 +26,8 @@ class TaskFactory extends Factory
             'location' => fake()->city(),
             'status' => 'pending',
             'proof_url' => null,
+            'proof_image' => null,
+            'revision_note' => null,
             'deadline' => null,
         ];
     }

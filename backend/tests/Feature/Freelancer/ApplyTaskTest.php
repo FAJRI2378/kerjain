@@ -15,17 +15,33 @@ class ApplyTaskTest extends TestCase
 
     private function hirer(): User
     {
-        return User::factory()->hirer()->create();
+        return User::factory()->hirer()->verified()->create();
     }
 
     private function freelancer(): User
     {
-        return User::factory()->freelancer()->create();
+        return User::factory()->freelancer()->verified()->create();
     }
 
     private function category(): JobCategory
     {
         return JobCategory::create(['name' => 'Pemasaran', 'slug' => 'pemasaran']);
+    }
+
+    public function test_unverified_freelancer_cannot_apply(): void
+    {
+        $worker = User::factory()->freelancer()->create(['is_verified' => false]);
+        $task = Task::factory()->approved()->create([
+            'owner_id' => $this->hirer()->id,
+            'category_id' => $this->category()->id,
+        ]);
+
+        $this->actingAs($worker, 'sanctum')
+            ->postJson("/api/tasks/{$task->id}/apply")
+            ->assertStatus(403)
+            ->assertJsonValidationErrors('verification');
+
+        $this->assertDatabaseCount('task_applications', 0);
     }
 
     public function test_freelancer_can_apply_to_approved_task(): void
@@ -92,10 +108,26 @@ class ApplyTaskTest extends TestCase
             ->assertStatus(409);
     }
 
+    public function test_apply_requires_phone_in_profile(): void
+    {
+        $worker = User::factory()->freelancer()->verified()->create(['phone' => null]);
+        $task = Task::factory()->approved()->create([
+            'owner_id' => $this->hirer()->id,
+            'category_id' => $this->category()->id,
+        ]);
+
+        $this->actingAs($worker, 'sanctum')
+            ->postJson("/api/tasks/{$task->id}/apply")
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('phone');
+
+        $this->assertDatabaseCount('task_applications', 0);
+    }
+
     public function test_hirer_cannot_apply_to_task(): void
     {
         $task = Task::factory()->approved()->create([
-            'owner_id' => User::factory()->hirer()->create()->id,
+            'owner_id' => User::factory()->hirer()->verified()->create()->id,
             'category_id' => $this->category()->id,
         ]);
 

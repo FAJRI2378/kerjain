@@ -4,36 +4,26 @@
   import { onMount } from 'svelte';
   import { auth } from '$lib/stores/auth.svelte.js';
   import { initials } from '$lib/format.js';
-  import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
 
   let { children } = $props();
 
   // --- MENU NAVIGASI DIPERBARUI ---
-  // Menambahkan menu "Status Lamaran" beserta simulasi notifikasi (badge)
+  // Menambahkan menu "Status Lamaran"
   const navItems = [
     { name: 'Dashboard', path: '/freelancer/dashboard', icon: '📊' },
     { name: 'Cari Jobs', path: '/freelancer/jobs', icon: '🔍' },
-    { name: 'Status Lamaran', path: '/freelancer/applications', icon: '📩', badge: 2 }, // Menu Baru
+    { name: 'Status Lamaran', path: '/freelancer/applications', icon: '📩' }, // Menu Baru
     { name: 'Tugas Saya', path: '/freelancer/mytasks', icon: '📋' },
-    { name: 'Chat UMKM', path: '/freelancer/chat', icon: '💬' },
+    { name: 'Kontak UMKM', path: '/freelancer/kontak', icon: '📞' },
     { name: 'Dompet', path: '/freelancer/wallet', icon: '💰' },
-    { name: 'Verifikasi ID', path: '/freelancer/id', icon: '🪪' }
+    { name: 'Verifikasi ID', path: '/freelancer/id', icon: '🪪' },
+    { name: 'Profil', path: '/freelancer/profile', icon: '👤' }
   ];
 
   let isMobileMenuOpen = $state(false);
-  let isProfileOpen = $state(false);
-  
+
   // State untuk Fitur Dark Mode
   let isDarkMode = $state(false);
-  
-  // Form State Profil
-  let profileName = $state('');
-  let profileEmail = $state('');
-  let profilePhone = $state('');
-  let avatarPreview = $state('');
-  let avatarFile = $state(null);
-  let newPassword = $state('');
-  let isSavingProfile = $state(false);
 
   // Helper untuk membaca URL foto secara aman
   function getUserAvatar(userObj) {
@@ -70,69 +60,12 @@
     if (auth.hydrated) {
       if (!auth.user) goto('/login', { replaceState: true });
       else if (auth.user.role !== 'freelancer') goto('/', { replaceState: true });
-      
-      // Sinkronisasi data user ke form profil
-      if (auth.user) {
-        profileName = auth.user.name || '';
-        profileEmail = auth.user.email || '';
-        profilePhone = auth.user.phone || '';
-        // Set preview awal dengan foto dari server
-        if (!avatarFile) {
-          avatarPreview = getUserAvatar(auth.user) || '';
-        }
-      }
     }
   });
-
-  function handleFileChange(e) {
-    const file = e.target.files[0];
-    if (file) {
-      avatarFile = file;
-      avatarPreview = URL.createObjectURL(file); // Preview instan dari local file
-    }
-  }
 
   async function handleLogout() {
     await auth.logout();
     goto('/');
-  }
-
-  async function handleSaveProfile(e) {
-    e.preventDefault();
-    isSavingProfile = true;
-
-    try {
-      const formData = new FormData();
-      formData.append('name', profileName);
-      formData.append('email', profileEmail);
-      formData.append('phone', profilePhone);
-      
-      if (avatarFile) {
-        formData.append('avatar', avatarFile);
-        formData.append('photo', avatarFile); 
-      }
-      
-      if (newPassword) {
-        formData.append('password', newPassword);
-      }
-
-      if (auth.updateProfile) {
-        const response = await auth.updateProfile(formData);
-        
-        if (response && response.user) {
-           avatarPreview = getUserAvatar(response.user);
-        }
-      }
-      
-      toast('Profil & foto berhasil diperbarui!', 'success');
-      isProfileOpen = false;
-      newPassword = '';
-      avatarFile = null; 
-    } catch (err) {
-      toast(errorMessage(err, 'Gagal memperbarui profil.'), 'error');
-    } finally {
-      isSavingProfile = false;
-    }
   }
 </script>
 
@@ -185,11 +118,7 @@
               <span class="nav-label">{item.name}</span>
             </div>
             
-            <!-- BADGE NOTIFIKASI -->
-            {#if item.badge}
-              <span class="nav-badge animate-pulse">{item.badge}</span>
-            {/if}
-          </a>
+            </a>
         {/each}
       </nav>
     </div>
@@ -206,27 +135,28 @@
         {isDarkMode ? '🌞 Mode Terang' : '🌙 Mode Gelap'}
       </button>
 
-      <button 
-        type="button" 
-        onclick={() => isProfileOpen = true}
+      <a 
+        href="/freelancer/profile"
         class="user-card-btn"
-        title="Buka Pengaturan Profil"
+        title="Buka Profil & Verifikasi"
       >
         <div class="user-avatar">
-          {#if getUserAvatar(auth.user) || avatarPreview}
-            <img src={avatarPreview || getUserAvatar(auth.user)} alt="Foto Profil" class="avatar-img" />
+          {#if getUserAvatar(auth.user)}
+            <img src={getUserAvatar(auth.user)} alt="Foto Profil" class="avatar-img" />
           {:else}
             {auth.user ? initials(auth.user.name) : '?'}
           {/if}
         </div>
         <div class="user-info">
           <p class="user-name">{auth.user?.name ?? 'Freelancer'}</p>
-          <p class="user-status {auth.user?.is_verified ? 'verified' : ''}">
-            {auth.user?.is_verified ? '✓ Terverifikasi' : '⏳ Belum Verifikasi'}
-          </p>
+          {#if auth.user?.is_verified}
+            <p class="user-status verified">✓ Terverifikasi</p>
+          {:else}
+            <p class="user-status">⚠️ Belum Terverifikasi</p>
+          {/if}
         </div>
         <span class="settings-gear">⚙️</span>
-      </button>
+      </a>
 
       <button onclick={handleLogout} class="btn-logout">
         <span>👈</span> Keluar
@@ -241,107 +171,6 @@
 </div>
 
 <!-- Modal Dialog Profil -->
-{#if isProfileOpen}
-  <div class="modal-backdrop" onclick={() => isProfileOpen = false}>
-    <div class="modal-card" onclick={(e) => e.stopPropagation()}>
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <h2 class="modal-title">Pengaturan Profil</h2>
-          <p class="modal-sub">Kelola foto profil, data diri, dan kata sandi Anda.</p>
-        </div>
-        <button class="btn-close" onclick={() => isProfileOpen = false}>✕</button>
-      </div>
-
-      <!-- Section Avatar Upload -->
-      <div class="profile-avatar-section">
-        <div class="large-avatar">
-          {#if avatarPreview}
-            <img src={avatarPreview} alt="Foto Profil" class="avatar-img-lg" />
-          {:else}
-            {auth.user ? initials(auth.user.name) : '?'}
-          {/if}
-        </div>
-        <div class="avatar-upload-info">
-          <label for="avatar-input" class="btn-change-avatar">
-            📷 Ubah Foto Profil
-          </label>
-          <input 
-            id="avatar-input" 
-            type="file" 
-            accept="image/png, image/jpeg, image/jpg" 
-            onchange={handleFileChange} 
-            class="hidden-file-input" 
-          />
-          <p class="avatar-tip">JPG/PNG, Maks. 2MB</p>
-        </div>
-      </div>
-
-      <form onsubmit={handleSaveProfile} class="modal-form">
-        <div class="form-group">
-          <label for="prof-name">Nama Lengkap</label>
-          <input 
-            id="prof-name" 
-            type="text" 
-            bind:value={profileName} 
-            required 
-            class="form-input" 
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="prof-email">Alamat Email / Gmail</label>
-          <input 
-            id="prof-email" 
-            type="email" 
-            bind:value={profileEmail} 
-            required 
-            class="form-input" 
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="prof-phone">Nomor HP / WhatsApp</label>
-          <input 
-            id="prof-phone" 
-            type="tel" 
-            bind:value={profilePhone} 
-            placeholder="Contoh: 081234567890" 
-            class="form-input" 
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="prof-pass">Ubah Kata Sandi <span class="opt">(Opsional)</span></label>
-          <input 
-            id="prof-pass" 
-            type="password" 
-            bind:value={newPassword} 
-            placeholder="Isi hanya jika ingin merubah" 
-            class="form-input" 
-          />
-        </div>
-
-        <div class="modal-actions">
-          <button 
-            type="button" 
-            class="btn-cancel" 
-            onclick={() => { isProfileOpen = false; avatarFile = null; avatarPreview = getUserAvatar(auth.user) || ''; }}
-          >
-            Batal
-          </button>
-          <button 
-            type="submit" 
-            disabled={isSavingProfile} 
-            class="btn-save"
-          >
-            {isSavingProfile ? 'Menyimpan...' : 'Simpan Perubahan'}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-{/if}
-
 <style>
   :global(body) {
     margin: 0;
@@ -629,25 +458,6 @@
     display: flex;
     align-items: center;
     gap: 12px;
-  }
-
-  .nav-badge {
-    background-color: #ef4444; /* Merah untuk Notifikasi */
-    color: white;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 2px 6px;
-    border-radius: 999px;
-  }
-
-  /* Animasi pulse untuk notifikasi baru */
-  .animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: .5; }
   }
 
   .nav-item:hover {

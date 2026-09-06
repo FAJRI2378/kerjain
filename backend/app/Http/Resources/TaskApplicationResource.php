@@ -14,6 +14,7 @@ class TaskApplicationResource extends JsonResource
             'task_id' => $this->task_id,
             'worker' => new UserResource($this->whenLoaded('worker')),
             'status' => $this->status,
+            'proposal' => $this->proposal,
             'created_at' => $this->created_at?->toISOString(),
         ];
     }

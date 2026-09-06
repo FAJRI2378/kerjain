@@ -1,65 +1,111 @@
 <script>
+  import { onMount } from 'svelte';
   import { auth } from '$lib/stores/auth.svelte.js';
-  import { toast } from '$lib/ui/toast.svelte.js';
+  import { api } from '$lib/api/client.js';
+  import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
   import { goto } from '$app/navigation';
-  
-  // Dummy Data untuk Presentasi
-  let earnings = $state(4500000);
-  let completedTasks = $state(12);
-  let rating = $state(4.9);
-  
-  // State Gamifikasi
-  let currentLevel = $state('Gold Worker');
-  let currentXP = $state(2450);
-  let targetXP = $state(3000);
-  let xpPercentage = $derived((currentXP / targetXP) * 100);
+
+  // Statistik Real dari Database
+  let earnings = $state(0);
+  let completedTasks = $state(0);
+  let rating = $state(0);
+  let totalReviews = $state(0);
+
+  // Rekomendasi Lowongan Terbuka (real dari feed tugas aktif)
+  let recommendedJobs = $state([]);
+  let loading = $state(true);
+  let applyingId = $state(null);
+
+  let unverifiedGate = $derived(!!(auth.user && !auth.user.is_verified));
+
+  // State Gamifikasi (turunan dari jumlah tugas selesai)
+  let currentLevel = $state('Bronze Worker');
+  let currentXP = $state(0);
+  let targetXP = $state(1000);
+  let xpPercentage = $derived(Math.min((currentXP / targetXP) * 100, 100));
 
   // State & Data untuk Modal Level Info
   let isLevelModalOpen = $state(false);
 
   // State untuk Notifikasi Pesan Masuk
-  let hasNewMessage = $state(true); // Default true agar indikator langsung menyala saat demo
-  let unreadMessageCount = $state(2);
-  
+  let hasNewMessage = $state(false);
+
   const levelTiers = [
-    { id: 'Bronze Worker', xp: '0 - 999', icon: '🥉' },
-    { id: 'Silver Worker', xp: '1.000 - 1.999', icon: '🥈' },
-    { id: 'Gold Worker', xp: '2.000 - 2.999', icon: '🥇' },
-    { id: 'Platinum', xp: '3.000 - 4.999', icon: '💎' },
-    { id: 'Diamond', xp: '5.000+', icon: '👑' }
+    { id: 'Bronze Worker', xp: '0 - 9 tugas', icon: '🥉' },
+    { id: 'Silver Worker', xp: '10 - 24 tugas', icon: '🥈' },
+    { id: 'Gold Worker', xp: '25 - 49 tugas', icon: '🥇' },
+    { id: 'Platinum', xp: '50 - 99 tugas', icon: '💎' },
+    { id: 'Diamond', xp: '100+ tugas', icon: '👑' }
   ];
 
-  // AI Recommended Jobs (Dummy)
-  let recommendedJobs = $state([
-    { id: 1, title: 'Desain Logo UMKM Kopi', umkm: 'Kopi Kenangan Senja', price: 'Rp 300.000', match: 98, type: 'Design' },
-    { id: 2, title: 'Admin Medsos Instagram', umkm: 'Toko Baju Nabila', price: 'Rp 1.200.000', match: 92, type: 'Social Media' },
-    { id: 3, title: 'Input Data Produk Tokopedia', umkm: 'Elektronik Murah', price: 'Rp 150.000', match: 85, type: 'Data Entry' }
-  ]);
+  const LEVEL_THRESHOLDS = [
+    { id: 'Diamond', minTasks: 100, xpTarget: 100000 },
+    { id: 'Platinum', minTasks: 50, xpTarget: 50000 },
+    { id: 'Gold Worker', minTasks: 25, xpTarget: 25000 },
+    { id: 'Silver Worker', minTasks: 10, xpTarget: 10000 },
+    { id: 'Bronze Worker', minTasks: 0, xpTarget: 1000 }
+  ];
+
+  function updateLevel(totalTasks) {
+    for (const tier of LEVEL_THRESHOLDS) {
+      if (totalTasks >= tier.minTasks) {
+        currentLevel = tier.id;
+        targetXP = tier.xpTarget;
+        break;
+      }
+    }
+    currentXP = Math.min(totalTasks * 100, targetXP);
+  }
+
+  async function loadDashboard() {
+    loading = true;
+    try {
+      const [dashRes, jobRes] = await Promise.all([
+        api.get('/api/freelancer/dashboard'),
+        api.get('/api/tasks?per_page=5')
+      ]);
+      earnings = dashRes.data?.balance ?? 0;
+      completedTasks = dashRes.data?.completed_tasks ?? 0;
+      rating = dashRes.data?.average_rating ?? 0;
+      totalReviews = dashRes.data?.total_reviews ?? 0;
+      recommendedJobs = jobRes.data ?? [];
+      updateLevel(completedTasks);
+    } catch (err) {
+      toast(errorMessage(err, 'Gagal memuat data dashboard.'), 'error');
+    } finally {
+      loading = false;
+    }
+  }
+
+  onMount(loadDashboard);
 
   function formatRupiah(number) {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(number) || 0);
   }
 
-  // Fungsi saat tombol "Ambil" diklik (Simulasi penambahan XP)
-  function handleTakeJob(job) {
-    currentXP += 150;
-    
-    if (currentXP >= targetXP && currentLevel === 'Gold Worker') {
-      currentLevel = 'Platinum';
-      targetXP = 5000;
-      toast('🎉 Luar biasa! XP Anda cukup dan level naik ke Platinum!', 'success');
-    } else {
-      toast(`Berhasil mengambil tugas "${job.title}"! (+150 XP)`, 'success');
+  // Ambil tugas real dari feed dan kirim lamaran
+  async function handleTakeJob(job) {
+    applyingId = job.id;
+    try {
+      await api.post(`/api/tasks/${job.id}/apply`, {});
+      toast(`Lamaran untuk "${job.title}" terkirim! Menunggu konfirmasi UMKM.`, 'success');
+      recommendedJobs = recommendedJobs.filter(j => j.id !== job.id);
+    } catch (err) {
+      if (err.status === 409) {
+        recommendedJobs = recommendedJobs.filter(j => j.id !== job.id);
+        toast(err.message || 'Kamu sudah melamar tugas ini.', 'info');
+      } else {
+        toast(errorMessage(err, 'Gagal mengirim lamaran.'), 'error');
+      }
+    } finally {
+      applyingId = null;
     }
-
-    recommendedJobs = recommendedJobs.filter(j => j.id !== job.id);
   }
 
-  // Fungsi klik ikon notifikasi -> langsung mengarahkan ke halaman chat
+  // Fungsi klik ikon notifikasi -> langsung mengarahkan ke halaman kontak UMKM
   function openNotifications() {
     hasNewMessage = false;
-    unreadMessageCount = 0;
-    goto('/freelancer/chat');
+    goto('/freelancer/kontak');
   }
 </script>
 
@@ -72,11 +118,10 @@
     </div>
     <div class="header-actions">
       <!-- Tombol Notifikasi Pesan Interaktif -->
-      <button class="btn-icon notify-btn" onclick={openNotifications} title="Ada pesan baru dari UMKM">
+      <button class="btn-icon notify-btn" onclick={openNotifications} title="Buka pesan">
         🔔 
         {#if hasNewMessage}
           <span class="badge-dot animate-ping"></span>
-          <span class="badge-dot-solid">{unreadMessageCount}</span>
         {/if}
       </button>
     </div>
@@ -106,6 +151,9 @@
       </div>
 
       <!-- Stats Grid -->
+      {#if loading}
+        <div class="stats-loading">Memuat data dashboard...</div>
+      {:else}
       <div class="stats-grid">
         <div class="card stat-card">
           <span class="stat-icon bg-green">💰</span>
@@ -120,37 +168,50 @@
         <div class="card stat-card">
           <span class="stat-icon bg-yellow">⭐</span>
           <p class="stat-label">Rating Pekerja</p>
-          <h2 class="stat-value">{rating} <span class="text-sm text-slate-400 font-normal">/ 5.0</span></h2>
+          <h2 class="stat-value">{Number(rating).toFixed(1)} <span class="text-sm text-slate-400 font-normal">/ 5.0 ({totalReviews} Review)</span></h2>
         </div>
       </div>
+      {/if}
     </div>
 
-    <!-- Kolom Kanan (AI Matcher) -->
+    <!-- Kolom Kanan (Job Matcher) -->
     <div class="right-col">
       <div class="card ai-card">
         <div class="card-header">
-          <h3 class="card-title">🤖 AI Job Matcher</h3>
+          <h3 class="card-title">🤖 Job Matcher</h3>
           <span class="pulse-indicator">Live</span>
         </div>
-        <p class="ai-desc">Pekerjaan UMKM yang paling cocok dengan skill Anda.</p>
-        
+        <p class="ai-desc">Lowongan tugas UMKM terbaru yang terbuka untuk Anda.</p>
+
+        {#if loading}
+          <p class="empty-jobs">Memuat rekomendasi tugas...</p>
+        {:else if recommendedJobs.length === 0}
+          <p class="empty-jobs">Belum ada tugas terbuka saat ini. Cek menu Cari Jobs untuk mencari tugas lainnya.</p>
+        {:else}
         <div class="job-list">
           {#each recommendedJobs as job (job.id)}
             <div class="job-item">
               <div class="job-info">
                 <h4 class="job-title">{job.title}</h4>
-                <p class="job-umkm">{job.umkm}</p>
-                <span class="job-price">{job.price}</span>
+                <p class="job-umkm">{job.owner?.name ?? '-'} • {job.category?.name ?? 'Tugas Mikro'}</p>
+                <span class="job-price">{formatRupiah(job.budget)}</span>
               </div>
               <div class="job-match">
-                <div class="match-badge">⚡ {job.match}% Cocok</div>
-                <button class="btn-apply" onclick={() => handleTakeJob(job)}>Ambil</button>
+                <div class="match-badge">📍 {job.location ?? 'Lokasi Lokal'}</div>
+                {#if unverifiedGate}
+                  <a href="/freelancer/id" class="btn-apply btn-apply-blocked" title="Verifikasi identitas untuk melamar">
+                    Verifikasi
+                  </a>
+                {:else}
+                  <button class="btn-apply" disabled={applyingId === job.id} onclick={() => handleTakeJob(job)}>
+                    {applyingId === job.id ? 'Mengirim...' : 'Ambil'}
+                  </button>
+                {/if}
               </div>
             </div>
-          {:else}
-            <p class="empty-jobs">Semua tugas rekomendasi telah diambil! Cek menu Cari Jobs untuk lainnya.</p>
           {/each}
         </div>
+        {/if}
       </div>
     </div>
   </div>
@@ -178,7 +239,7 @@
                 <h4 class="tier-name">{tier.id}</h4>
                 <span class="tier-xp">{tier.xp} XP</span>
               </div>
-              <p class="tier-reward">{tier.reward}</p>
+              <p class="tier-reward">Selesaikan tugas secara konsisten untuk naik level dan membangun kepercayaan UMKM.</p>
             </div>
             {#if tier.id === currentLevel}
               <div class="current-badge">Kamu di sini</div>
@@ -247,19 +308,6 @@
     height: 10px;
     background: #ef4444;
     border-radius: 50%;
-  }
-
-  .badge-dot-solid {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #ef4444;
-    color: white;
-    font-size: 9px;
-    font-weight: 800;
-    padding: 2px 6px;
-    border-radius: 10px;
-    border: 2px solid #ffffff;
   }
 
   .grid-layout {
@@ -354,6 +402,16 @@
   }
 
   /* Stats Grid */
+  .stats-loading {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+  }
+
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -508,6 +566,16 @@
 
   .btn-apply:hover {
     background: #1e3a8a;
+  }
+
+  .btn-apply-blocked {
+    background: #d97706;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-apply-blocked:hover {
+    background: #b45309;
   }
 
   .empty-jobs {

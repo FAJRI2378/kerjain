@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class UserResource extends JsonResource
 {
@@ -16,9 +17,11 @@ class UserResource extends JsonResource
             'role' => $this->role,
             'phone' => $this->phone,
             'avatar' => $this->avatar,
+            'avatar_url' => $this->avatar ? Storage::disk('public')->url(ltrim($this->avatar, '/')) : null,
             'is_verified' => $this->is_verified,
             'is_active' => $this->is_active,
             'business_profile' => $this->whenLoaded('businessProfile', fn () => new BusinessProfileResource($this->businessProfile)),
+            'verification' => $this->whenLoaded('verification', fn () => $this->verification ? new VerificationResource($this->verification) : null),
             'created_at' => $this->created_at?->toISOString(),
         ];
     }

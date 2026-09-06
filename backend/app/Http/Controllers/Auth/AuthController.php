@@ -21,6 +21,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => $request->password,
             'role' => $request->role,
+            'phone' => $request->phone,
         ]);
 
         if ($request->role === 'hirer') {
@@ -28,7 +29,7 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'business_name' => $request->business_name,
                 'category' => 'Kuliner & Makanan',
-                'phone' => '',
+                'phone' => $request->phone,
             ]);
         }
 

@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { api } from '$lib/api/client.js';
+  import { auth } from '$lib/stores/auth.svelte.js';
   import { formatRupiah } from '$lib/format.js';
   import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
 
@@ -11,6 +12,25 @@
   let jobs = $state([]);
   let loading = $state(true);
   let applyingId = $state(null);
+
+  // Modal Detail
+  let isDetailModalOpen = $state(false);
+  let detailJob = $state(null);
+  let loadingDetail = $state(false);
+
+  async function viewDetail(job) {
+    isDetailModalOpen = true;
+    loadingDetail = true;
+    try {
+      const res = await api.get(`/api/tasks/${job.id}`);
+      detailJob = res.data ?? null;
+    } catch (err) {
+      toast(errorMessage(err, 'Gagal memuat detail tugas.'), 'error');
+      isDetailModalOpen = false;
+    } finally {
+      loadingDetail = false;
+    }
+  }
 
   async function load() {
     loading = true;
@@ -44,6 +64,8 @@
   );
 
   let appliedIds = $state([]);
+
+  let unverifiedGate = $derived(!!(auth.user && !auth.user.is_verified));
 
   async function applyJob(jobId, title) {
     applyingId = jobId;
@@ -93,7 +115,14 @@
     </div>
   </div>
 
-  {#if loading}
+  {#if unverifiedGate}
+    <div class="verify-gate">
+      <div class="gate-icon">🪪</div>
+      <h2 class="gate-title">Verifikasi Identitas Dulu, Yuk!</h2>
+      <p class="gate-sub">Untuk melamar pekerjaan, kamu perlu verifikasi identitas. Prosesnya cepat — maksimal 1×24 jam.</p>
+      <a href="/freelancer/id" class="btn-gate">Ajukan Verifikasi Sekarang</a>
+    </div>
+  {:else if loading}
     <div class="loading-state">
       <div class="spinner"></div>
       <p>Memuat lowongan...</p>
@@ -157,6 +186,12 @@
               class="btn-apply {appliedIds.includes(job.id) ? 'applied' : ''}">
               {appliedIds.includes(job.id) ? '✓ Sudah Dilamar' : applyingId === job.id ? 'Mengirim...' : 'Lamar Tugas'}
             </button>
+
+            <button
+              onclick={() => viewDetail(job)}
+              class="btn-detail">
+              Lihat Detail
+            </button>
           </div>
         </div>
       {:else}
@@ -167,6 +202,61 @@
     </div>
   {/if}
 </div>
+
+<!-- Modal Detail Tugas -->
+{#if isDetailModalOpen}
+  <div class="modal-backdrop" onclick={() => isDetailModalOpen = false}>
+    <div class="modal-card" onclick={(e) => e.stopPropagation()}>
+      <div class="modal-head">
+        <h3 class="modal-title">Detail Tugas</h3>
+        <button onclick={() => isDetailModalOpen = false} class="modal-close">✕</button>
+      </div>
+
+      {#if loadingDetail}
+        <div class="modal-loading">Memuat detail tugas...</div>
+      {:else if detailJob}
+        <div class="modal-body">
+          <div class="modal-tags">
+            <span class="badge-cat">{detailJob.category?.name ?? 'Tugas Mikro'}</span>
+            <span class="modal-location">📍 {detailJob.location ?? 'Lokasi Lokal'}</span>
+          </div>
+
+          <h4 class="modal-job-title">{detailJob.title}</h4>
+          <p class="modal-employer">
+            Pemberi Kerja: <strong>{detailJob.owner?.name ?? '-'}</strong>
+          </p>
+
+          <div class="modal-desc">
+            <p>{detailJob.description || 'Tidak ada deskripsi.'}</p>
+          </div>
+
+          <div class="modal-budget-row">
+            <div>
+              <span class="detail-label">Honor Pekerjaan</span>
+              <span class="budget-value">{formatRupiah(detailJob.budget)}</span>
+            </div>
+            {#if detailJob.deadline}
+              <div>
+                <span class="detail-label">Deadline</span>
+                <span class="deadline-text">⏱️ {detailJob.deadline}</span>
+              </div>
+            {/if}
+          </div>
+
+          <div class="modal-foot">
+            <button
+              onclick={() => applyJob(detailJob.id, detailJob.title)}
+              disabled={appliedIds.includes(detailJob.id) || applyingId === detailJob.id}
+              class="btn-apply {appliedIds.includes(detailJob.id) ? 'applied' : ''}">
+              {appliedIds.includes(detailJob.id) ? '✓ Sudah Dilamar' : applyingId === detailJob.id ? 'Mengirim...' : 'Lamar Tugas Ini'}
+            </button>
+            <button onclick={() => isDetailModalOpen = false} class="btn-close-modal">Tutup</button>
+          </div>
+        </div>
+      {/if}
+    </div>
+  </div>
+{/if}
 
 <style>
   .jobs-page {
@@ -305,6 +395,68 @@
     font-weight: 500;
   }
 
+  /* Verify Gate */
+  .verify-gate {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 56px 32px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+
+  .gate-icon {
+    font-size: 44px;
+    margin-bottom: 4px;
+  }
+
+  .gate-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0d233a;
+    margin: 0;
+  }
+
+  .gate-sub {
+    font-size: 13.5px;
+    color: #64748b;
+    margin: 0 auto;
+    max-width: 460px;
+    line-height: 1.6;
+  }
+
+  .btn-gate {
+    display: inline-block;
+    margin-top: 12px;
+    background: #15803d;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.15);
+  }
+
+  .btn-gate:hover {
+    background: #166534;
+  }
+
+  :global(body.dark-theme .verify-gate) {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  :global(body.dark-theme .gate-title) {
+    color: #ffffff !important;
+  }
+  :global(body.dark-theme .gate-sub) {
+    color: #94a3b8 !important;
+  }
+
   /* Jobs Grid */
   .jobs-grid {
     display: grid;
@@ -405,6 +557,34 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
+    gap: 8px;
+  }
+
+  .btn-detail {
+    background-color: #ffffff;
+    color: #15803d;
+    border: 1px solid #15803d;
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-detail:hover {
+    background-color: #f0fdf4;
+  }
+
+  :global(body.dark-theme .btn-detail) {
+    background-color: #15803d;
+    color: #ffffff;
+    border-color: #15803d;
+  }
+
+  :global(body.dark-theme .btn-detail:hover) {
+    background-color: #166534;
   }
 
   .budget-label {
@@ -499,5 +679,189 @@
   }
   :global(body.dark-theme .card-foot) {
     border-color: #334155 !important;
+  }
+
+  /* Modal Detail */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 100;
+  }
+
+  .modal-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 460px;
+    padding: 24px;
+    box-shadow: 0 20px 30px -8px rgba(0, 0, 0, 0.25);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+
+  .modal-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .modal-close {
+    background: #f1f5f9;
+    border: none;
+    color: #64748b;
+    font-weight: 700;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .modal-loading {
+    text-align: center;
+    padding: 40px 0;
+    color: #94a3b8;
+    font-size: 13px;
+  }
+
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .modal-tags {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .modal-location {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .modal-job-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  .modal-employer {
+    font-size: 12.5px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .modal-employer strong {
+    color: #334155;
+  }
+
+  .modal-desc {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .modal-desc p {
+    font-size: 12.5px;
+    color: #475569;
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+
+  .modal-budget-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .detail-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .modal-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 14px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .btn-close-modal {
+    background: #f1f5f9;
+    border: none;
+    color: #475569;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  :global(body.dark-theme .modal-card) {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+  }
+  :global(body.dark-theme .modal-head) {
+    border-color: #334155 !important;
+  }
+  :global(body.dark-theme .modal-title),
+  :global(body.dark-theme .modal-job-title) {
+    color: #ffffff !important;
+  }
+  :global(body.dark-theme .modal-close) {
+    background: #0f172a !important;
+    color: #cbd5e1 !important;
+  }
+  :global(body.dark-theme .modal-employer),
+  :global(body.dark-theme .modal-location) {
+    color: #94a3b8 !important;
+  }
+  :global(body.dark-theme .modal-employer strong) {
+    color: #cbd5e1 !important;
+  }
+  :global(body.dark-theme .modal-desc) {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+  }
+  :global(body.dark-theme .modal-desc p) {
+    color: #cbd5e1 !important;
+  }
+  :global(body.dark-theme .modal-foot) {
+    border-color: #334155 !important;
+  }
+  :global(body.dark-theme .btn-close-modal) {
+    background: #0f172a !important;
+    color: #cbd5e1 !important;
   }
 </style>

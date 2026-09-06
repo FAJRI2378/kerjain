@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { api } from '$lib/api/client.js';
+  import { api, getBlobUrl } from '$lib/api/client.js';
   import { formatRupiah, formatNumber } from '$lib/format.js';
   import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
 
@@ -40,6 +40,27 @@
   }
 
   onMount(load);
+
+  async function handleDownloadReport() {
+    const now = new Date();
+    const qs = new URLSearchParams({
+      timeframe: 'monthly',
+      year: String(now.getFullYear())
+    }).toString();
+    try {
+      const url = await getBlobUrl(`/api/admin/report?${qs}`);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Laporan-Kerjain-monthly-${now.getFullYear()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast('Laporan PDF sedang diunduh.', 'success');
+    } catch (err) {
+      toast(errorMessage(err, 'Gagal mengunduh laporan PDF.'), 'error');
+    }
+  }
 
   async function handleApprove(id) {
     actingId = id;
@@ -107,7 +128,7 @@
         <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
         System Healthy
       </span>
-      <button class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 rounded-xl transition btn-report">
+      <button onclick={handleDownloadReport} class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-slate-300 rounded-xl transition btn-report">
         Unduh Laporan
       </button>
     </div>

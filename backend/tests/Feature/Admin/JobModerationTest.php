@@ -78,10 +78,14 @@ class JobModerationTest extends TestCase
         ]);
 
         $this->actingAs($this->admin(), 'sanctum')
-            ->postJson("/api/admin/tasks/{$task->id}/reject")
+            ->postJson("/api/admin/tasks/{$task->id}/reject", ['reason' => 'Konten kurang jelas.'])
             ->assertOk();
 
-        $this->assertDatabaseHas('tasks', ['id' => $task->id, 'status' => 'rejected']);
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'status' => 'rejected',
+            'rejection_reason' => 'Konten kurang jelas.',
+        ]);
     }
 
     public function test_cannot_approve_already_approved_task(): void
@@ -137,5 +141,35 @@ class JobModerationTest extends TestCase
         $this->actingAs($this->hirer(), 'sanctum')
             ->postJson("/api/admin/tasks/{$task->id}/approve")
             ->assertStatus(403);
+    }
+
+    public function test_admin_cannot_reject_without_reason(): void
+    {
+        $category = $this->category();
+        $task = Task::factory()->create([
+            'owner_id' => $this->hirer()->id,
+            'category_id' => $category->id,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($this->admin(), 'sanctum')
+            ->postJson("/api/admin/tasks/{$task->id}/reject", [])
+            ->assertStatus(422);
+
+        $this->assertDatabaseHas('tasks', ['id' => $task->id, 'status' => 'pending']);
+    }
+
+    public function test_admin_cannot_reject_with_short_reason(): void
+    {
+        $category = $this->category();
+        $task = Task::factory()->create([
+            'owner_id' => $this->hirer()->id,
+            'category_id' => $category->id,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($this->admin(), 'sanctum')
+            ->postJson("/api/admin/tasks/{$task->id}/reject", ['reason' => 'abc'])
+            ->assertStatus(422);
     }
 }

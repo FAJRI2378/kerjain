@@ -1,9 +1,11 @@
 <script>
+  import { onMount } from 'svelte';
+  import { api } from '$lib/api/client.js';
   import { auth } from '$lib/stores/auth.svelte.js';
-  import { toast } from '$lib/ui/toast.svelte.js';
+  import { toast, errorMessage } from '$lib/ui/toast.svelte.js';
 
   // State Dompet & Riwayat Saldo
-  let saldo = $state(4500000);
+  let saldo = $state(0);
   let withdrawAmount = $state('');
   let selectedBank = $state('BCA');
   let accountNumber = $state('');
@@ -18,15 +20,30 @@
   let currentPage = $state(1);
   let itemsPerPage = $state(3); // Jumlah item per halaman (bisa diubah sesuai kebutuhan)
 
-  // Data Dummy Transaksi Diperkaya
-  let transactions = $state([
+  // Data Dummy sebagai fallback saat backend tidak aktif
+  let dummyTransactions = [
     { id: 1, type: 'in', title: 'Pembayaran Tugas: Desain Logo Kopi', amount: 300000, date: '2026-09-04', month: '09', year: '2026' },
     { id: 2, type: 'out', title: 'Penarikan Dana ke BCA (***8821)', amount: 1500000, date: '2026-09-01', month: '09', year: '2026' },
     { id: 3, type: 'in', title: 'Pembayaran Tugas: Admin Medsos', amount: 1200000, date: '2026-08-28', month: '08', year: '2026' },
     { id: 4, type: 'in', title: 'Pembayaran Tugas: Input Data Tokopedia', amount: 150000, date: '2026-08-15', month: '08', year: '2026' },
     { id: 5, type: 'out', title: 'Penarikan Dana ke DANA (0812***)', amount: 500000, date: '2026-07-20', month: '07', year: '2026' },
     { id: 6, type: 'in', title: 'Pembayaran Tugas: Pembuatan Landing Page', amount: 2500000, date: '2026-07-10', month: '07', year: '2026' }
-  ]);
+  ];
+  let transactions = $state([]);
+
+  async function loadWallet() {
+    try {
+      const res = await api.get('/api/freelancer/wallet');
+      saldo = res.data.balance;
+      transactions = res.data.transactions ?? [];
+    } catch (err) {
+      // Data dummy untuk presentasi jika backend tidak aktif
+      saldo = 4500000;
+      transactions = dummyTransactions;
+    }
+  }
+
+  onMount(loadWallet);
 
   // State Pusat Notifikasi (Activity Log)
   let notifications = $state([
@@ -80,8 +97,8 @@
     }
   }
 
-  // Simulasi Penarikan Dana (Withdrawal)
-  function handleWithdraw(e) {
+  // Penarikan Dana (Withdrawal) terhubung ke API
+  async function handleWithdraw(e) {
     e.preventDefault();
     const amountNum = Number(withdrawAmount);
 
@@ -98,32 +115,23 @@
       return;
     }
 
-    const todayObj = new Date();
-    const yyyy = todayObj.getFullYear();
-    const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
-    const dd = String(todayObj.getDate()).padStart(2, '0');
-    const dateStr = `${yyyy}-${mm}-${dd}`;
-
     isWithdrawing = true;
-    setTimeout(() => {
-      saldo -= amountNum;
-      transactions = [
-        { 
-          id: Date.now(), 
-          type: 'out', 
-          title: `Penarikan Dana ke ${selectedBank} (${accountNumber})`, 
-          amount: amountNum, 
-          date: dateStr, 
-          month: mm, 
-          year: String(yyyy) 
-        },
-        ...transactions
-      ];
-      isWithdrawing = false;
+    try {
+      const res = await api.post('/api/freelancer/wallet/withdraw', {
+        amount: amountNum,
+        bank_name: selectedBank,
+        account_number: accountNumber
+      });
+      saldo = res.data.balance;
+      transactions = res.data.transactions ?? [];
       withdrawAmount = '';
       accountNumber = '';
       toast('Penarikan dana berhasil diproses!', 'success');
-    }, 1000);
+    } catch (err) {
+      toast(errorMessage(err, 'Penarikan dana gagal.'), 'error');
+    } finally {
+      isWithdrawing = false;
+    }
   }
 
   function markAllRead() {

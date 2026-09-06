@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Models\Verification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -24,14 +26,31 @@ class UserController extends Controller
             $query->where('role', $role);
         }
 
-        $users = $query->orderByDesc('created_at')->paginate($request->get('per_page', 20));
+        $users = $query->with(['businessProfile', 'verification'])->orderByDesc('created_at')->paginate($request->get('per_page', 20));
 
         return UserResource::collection($users);
     }
 
     public function verify(User $user)
     {
-        $user->update(['is_verified' => ! $user->is_verified]);
+        DB::transaction(function () use ($user) {
+            $user->update(['is_verified' => ! $user->is_verified]);
+
+            if ($user->is_verified) {
+                $latest = $user->verifications()->latest('id')->first();
+
+                Verification::updateOrCreate(
+                    ['user_id' => $user->id, 'status' => 'approved'],
+                    [
+                        'role' => $user->role,
+                        'status' => 'approved',
+                        'data' => array_merge($latest?->data ?? [], ['note' => 'Verifikasi cepat oleh admin.']),
+                        'reviewed_by' => request()->user()->id,
+                        'reviewed_at' => now(),
+                    ]
+                );
+            }
+        });
 
         return response()->json(['message' => 'Verification status updated.']);
     }

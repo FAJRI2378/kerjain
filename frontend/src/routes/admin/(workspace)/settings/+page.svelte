@@ -6,7 +6,6 @@
   let platformCommission = $state(10);
   let autoApproveJobs = $state(false);
   let maintenanceMode = $state(false);
-  let emailNotifications = $state(true);
   let loading = $state(true);
   let saving = $state(false);
 
@@ -17,7 +16,6 @@
       platformCommission = res.data?.platform_commission ?? 10;
       autoApproveJobs = !!res.data?.auto_approve_jobs;
       maintenanceMode = !!res.data?.maintenance_mode;
-      emailNotifications = !!res.data?.email_notifications;
     } catch (err) {
       toast(errorMessage(err, 'Gagal memuat pengaturan.'), 'error');
     } finally {
@@ -34,8 +32,7 @@
       await api.put('/api/admin/settings', {
         platform_commission: Number(platformCommission),
         auto_approve_jobs: autoApproveJobs,
-        maintenance_mode: maintenanceMode,
-        email_notifications: emailNotifications
+        maintenance_mode: maintenanceMode
       });
       toast('Pengaturan sistem berhasil disimpan!', 'success');
     } catch (err) {
@@ -98,19 +95,6 @@
           <input 
             type="checkbox" 
             bind:checked={autoApproveJobs} 
-            class="w-5 h-5 accent-purple-600 rounded cursor-pointer"
-          />
-        </div>
-
-        <!-- Toggle Email Notification -->
-        <div class="flex items-center justify-between p-3 bg-slate-950/60 rounded-xl border border-slate-800/60 toggle-box">
-          <div>
-            <p class="font-bold text-white toggle-title">Notifikasi Email Admin</p>
-            <p class="text-[10px] text-slate-400">Kirim alert email setiap ada verifikasi pengguna baru.</p>
-          </div>
-          <input 
-            type="checkbox" 
-            bind:checked={emailNotifications} 
             class="w-5 h-5 accent-purple-600 rounded cursor-pointer"
           />
         </div>

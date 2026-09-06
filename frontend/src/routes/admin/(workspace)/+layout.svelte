@@ -12,7 +12,8 @@
     { name: 'Moderasi Job', path: '/admin/jobs', icon: '📝' },
     { name: 'Verifikasi User', path: '/admin/users', icon: '🪪' },
     { name: 'Laporan & Analytics', path: '/admin/analytics', icon: '📈' },
-    { name: 'Pengaturan System', path: '/admin/settings', icon: '⚙️' }
+    { name: 'Pengaturan System', path: '/admin/settings', icon: '⚙️' },
+    { name: 'Profil', path: '/admin/profile', icon: '👤' }
   ];
 
   let isMobileMenuOpen = $state(false);
@@ -124,7 +125,7 @@
       </button>
 
       <!-- Admin Profile Info -->
-      <div class="flex items-center gap-3 px-2 py-1.5 rounded-xl bg-slate-950/60 border border-slate-800/50 admin-user-box">
+      <a href="/admin/profile" class="flex items-center gap-3 px-2 py-1.5 rounded-xl bg-slate-950/60 border border-slate-800/50 admin-user-box hover:border-purple-500/40 transition">
         <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center font-bold text-white text-xs flex-shrink-0">
           {auth.user ? initials(auth.user.name) : '?'}
         </div>
@@ -132,7 +133,7 @@
           <p class="text-xs font-bold text-white truncate">{auth.user?.name ?? 'Super Admin'}</p>
           <p class="text-[10px] text-slate-500 truncate">{auth.user?.email ?? ''}</p>
         </div>
-      </div>
+      </a>
 
       <!-- Exit Button -->
       <button

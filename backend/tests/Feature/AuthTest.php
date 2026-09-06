@@ -17,11 +17,13 @@ class AuthTest extends TestCase
             'email' => 'ahmad@worker.com',
             'password' => 'password123',
             'role' => 'freelancer',
+            'phone' => '081234567890',
         ]);
 
         $response->assertStatus(201)
             ->assertJsonPath('data.user.name', 'Ahmad Fauzi')
             ->assertJsonPath('data.user.role', 'freelancer')
+            ->assertJsonPath('data.user.phone', '081234567890')
             ->assertJsonStructure(['data' => ['user', 'token']]);
 
         $this->assertDatabaseHas('users', ['email' => 'ahmad@worker.com']);
@@ -34,14 +36,27 @@ class AuthTest extends TestCase
             'email' => 'kopi@umkm.com',
             'password' => 'password123',
             'role' => 'hirer',
+            'phone' => '081298765432',
             'business_name' => 'Kopi Hits Nusantara',
         ]);
 
         $response->assertStatus(201)
             ->assertJsonPath('data.user.role', 'hirer')
+            ->assertJsonPath('data.user.phone', '081298765432')
             ->assertJsonPath('data.user.business_profile.business_name', 'Kopi Hits Nusantara');
 
         $this->assertDatabaseHas('business_profiles', ['business_name' => 'Kopi Hits Nusantara']);
+        $this->assertDatabaseHas('users', ['email' => 'kopi@umkm.com', 'phone' => '081298765432']);
+    }
+
+    public function test_register_requires_phone(): void
+    {
+        $this->postJson('/api/auth/register', [
+            'name' => 'John',
+            'email' => 'john@mail.com',
+            'password' => 'password123',
+            'role' => 'freelancer',
+        ])->assertStatus(422)->assertJsonValidationErrors('phone');
     }
 
     public function test_register_with_existing_email_fails(): void
