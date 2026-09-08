@@ -309,14 +309,14 @@
   .page-sub { color: #64748b; font-size: 13.5px; margin: 0; }
 
   .card { background: #ffffff; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
-  .wallet-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
-  @media (min-width: 992px) { .wallet-grid { grid-template-columns: 1fr 1.5fr; } }
-  .wallet-left, .wallet-right { display: flex; flex-direction: column; gap: 24px; }
+  .wallet-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  @media (min-width: 992px) { .wallet-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); } }
+  .wallet-left, .wallet-right { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
 
-  .gradient-bg { background: linear-gradient(135deg, #0d233a 0%, #1a365d 100%); color: white; border: none; }
+  .gradient-bg { background: linear-gradient(135deg, #0d233a 0%, #1a365d 100%); color: white; border: none; min-width: 0; }
   .balance-label { font-size: 13px; color: #94a3b8; margin: 0 0 4px; }
-  .balance-value { font-size: 32px; font-weight: 800; margin: 0 0 16px; }
-  .balance-info-row { display: flex; justify-content: space-between; align-items: center; }
+  .balance-value { font-size: clamp(24px, 7vw, 32px); font-weight: 800; margin: 0 0 16px; overflow-wrap: anywhere; }
+  .balance-info-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
   .balance-badge { background: rgba(16,185,129,0.2); color: #34d399; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
   .btn-open-topup { background: #4f46e5; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12.5px; cursor: pointer; transition: background 0.2s; }
   .btn-open-topup:hover { background: #4338ca; }
@@ -332,10 +332,10 @@
   .form-input { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none; background: #ffffff; color: #0f172a; }
   .form-input:focus { border-color: #15803d; }
 
-  .rekap-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .rekap-box { background: #ffffff; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; display: flex; flex-direction: column; gap: 2px; }
+  .rekap-summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .rekap-box { background: #ffffff; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .rekap-label { font-size: 11px; font-weight: 700; color: #64748b; }
-  .rekap-val { font-size: 15px; font-weight: 800; }
+  .rekap-val { font-size: 15px; font-weight: 800; min-width: 0; overflow-wrap: anywhere; }
 
   /* Transaksi */
   .tx-list { display: flex; flex-direction: column; gap: 12px; }

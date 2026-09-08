@@ -77,7 +77,7 @@
   </div>
 
   <!-- Sidebar Navigasi -->
-  <aside class={`fixed md:sticky top-0 left-0 h-screen w-64 bg-slate-900/90 border-r border-slate-800/80 backdrop-blur-2xl p-5 flex flex-col justify-between z-40 transition-transform duration-300 sidebar-panel ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+  <aside class={`fixed md:sticky top-16 md:top-0 left-0 h-screen w-64 bg-slate-900/90 border-r border-slate-800/80 backdrop-blur-2xl p-5 flex flex-col overflow-y-auto z-40 transition-transform duration-300 sidebar-panel ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
     
     <div class="space-y-8">
       <!-- Logo Brand -->
@@ -113,7 +113,7 @@
     </div>
 
     <!-- Bottom Controls & Logout Bar -->
-    <div class="pt-4 border-t border-slate-800/80 space-y-3">
+    <div class="mt-auto pt-4 border-t border-slate-800/80 space-y-3">
       
       <!-- Tombol Toggle Dark/Light Mode -->
       <button 

@@ -493,6 +493,7 @@
   .search-wrap {
     width: 100%;
     max-width: 320px;
+    min-width: 0;
   }
 
   .search-input {

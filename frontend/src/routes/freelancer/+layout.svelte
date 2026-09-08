@@ -401,7 +401,8 @@
     padding: 24px 16px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
+    overflow-y: auto;
     z-index: 40;
     transform: translateX(-100%);
     transition: transform 0.2s ease-in-out, background-color 0.3s ease, border-color 0.3s ease;
@@ -476,6 +477,7 @@
 
   /* Sidebar Bottom & User Card Button */
   .sidebar-bottom {
+    margin-top: auto;
     padding-top: 16px;
     border-top: 1px solid #f1f5f9;
     display: flex;

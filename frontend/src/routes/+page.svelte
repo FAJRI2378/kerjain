@@ -136,7 +136,7 @@
         </button>
 
         <a href="/register" class="btn-primary-header">
-          <span class="plus-icon">+</span> Buka Lowongan / Cari Pekerjaan
+          <span class="plus-icon">+</span> <span class="cta-full">Buka Lowongan / Cari Pekerjaan</span><span class="cta-short">Cari Pekerjaan</span>
         </a>
       </nav>
     </div>
@@ -542,7 +542,31 @@
     font-weight: 600;
     font-size: 14px;
     text-decoration: none;
+    white-space: nowrap;
     transition: background-color 0.2s, color 0.2s;
+  }
+
+  .cta-short {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    .cta-full {
+      display: none;
+    }
+    .cta-short {
+      display: inline;
+    }
+    .brand-tagline {
+      display: none;
+    }
+    .btn-primary-header {
+      padding: 9px 14px;
+      font-size: 13px;
+    }
+    .site-nav {
+      gap: 10px;
+    }
   }
 
   .btn-primary-header:hover {
@@ -649,7 +673,7 @@
   }
 
   .stat-number {
-    font-size: 80px;
+    font-size: clamp(48px, 14vw, 80px);
     font-weight: 900;
     color: #d9f99d;
     line-height: 0.9;

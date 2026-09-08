@@ -380,6 +380,13 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   }
 
+  @media (max-width: 639px) {
+    .dashboard-banner,
+    .section-card {
+      padding: 20px;
+    }
+  }
+
   .section-header {
     display: flex;
     justify-content: space-between;

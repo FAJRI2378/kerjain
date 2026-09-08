@@ -359,13 +359,13 @@
 
   .wallet-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 24px;
   }
 
   @media (min-width: 992px) {
     .wallet-grid {
-      grid-template-columns: 1.3fr 1fr;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
     }
   }
 
@@ -373,6 +373,7 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
+    min-width: 0;
   }
 
   /* Saldo Card */
@@ -380,6 +381,7 @@
     background: linear-gradient(135deg, #0d233a 0%, #1a365d 100%);
     color: white;
     border: none;
+    min-width: 0;
   }
 
   .balance-label {
@@ -389,9 +391,10 @@
   }
 
   .balance-value {
-    font-size: 32px;
+    font-size: clamp(24px, 7vw, 32px);
     font-weight: 800;
     margin: 0 0 12px;
+    overflow-wrap: anywhere;
   }
 
   .balance-badge {
@@ -421,6 +424,12 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+  }
+
+  @media (max-width: 560px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
   }
 
   .form-group {
@@ -497,7 +506,7 @@
 
   .rekap-summary-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
 
@@ -509,6 +518,7 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
   }
 
   .rekap-label {
@@ -520,6 +530,8 @@
   .rekap-val {
     font-size: 15px;
     font-weight: 800;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   /* Transaksi */

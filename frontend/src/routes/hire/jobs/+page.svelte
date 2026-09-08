@@ -391,7 +391,7 @@
           </div>
 
           <!-- Tombol Aksi (Detail, Pelamar, Edit, Hapus) -->
-          <div class="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end pt-3 md:pt-0 border-t md:border-0 border-slate-100 dark:border-slate-800 divider-border">
+          <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-between md:justify-end pt-3 md:pt-0 border-t md:border-0 border-slate-100 dark:border-slate-800 divider-border">
             <!-- Tombol Lihat Detail -->
             <button 
               onclick={() => viewDetail(job)}

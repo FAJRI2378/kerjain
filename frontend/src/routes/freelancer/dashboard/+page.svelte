@@ -342,6 +342,8 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
     margin-bottom: 20px;
   }
 
@@ -349,6 +351,8 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    flex: 1;
+    min-width: 0;
   }
 
   .badge-icon {
@@ -384,6 +388,16 @@
 
   .btn-level-detail:hover {
     background: rgba(255,255,255,0.25);
+  }
+
+  @media (max-width: 480px) {
+    .level-header-wrapper {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .btn-level-detail {
+      align-self: flex-start;
+    }
   }
 
   .progress-track {
