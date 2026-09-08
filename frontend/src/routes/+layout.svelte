@@ -6,6 +6,8 @@
   import MaintenanceScreen from '$lib/components/maintenance-screen.svelte';
   import { auth } from '$lib/stores/auth.svelte.js';
   import { maintenance } from '$lib/stores/maintenance.svelte.js';
+  import { theme } from '$lib/stores/theme.js'; // <- 1. Import store theme di sini
+
   let { children } = $props();
 
   const isAdminRoute = $derived($page.url.pathname.startsWith('/admin'));
@@ -17,6 +19,8 @@
     if (!maintenance.checked) {
       maintenance.hydrate();
     }
+    // 2. Panggil theme.init() di dalam onMount layout utama
+    theme.init();
   });
 </script>
 

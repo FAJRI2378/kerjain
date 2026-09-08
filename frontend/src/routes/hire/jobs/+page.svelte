@@ -284,7 +284,7 @@
   const totalApplicantsAll = $derived(jobs.reduce((sum, j) => sum + (j.applicants_count || 0), 0));
 </script>
 
-<div class="p-6 md:p-10 space-y-8 font-sans hire-jobs-page max-w-7xl mx-auto">
+<div class="px-4 sm:px-6 md:px-10 py-6 md:py-10 space-y-6 md:space-y-8 font-sans hire-jobs-page max-w-7xl mx-auto w-full overflow-x-hidden">
   
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6 header-box">
@@ -293,45 +293,45 @@
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Workspace UMKM</span>
       </div>
-      <h1 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight page-title text-dark-fix">Kelola Jobs & Tugas</h1>
-      <p class="text-xs md:text-sm text-slate-600 dark:text-slate-400 page-sub text-dark-sub">Pantau tugas yang diposting, tinjau pelamar, dan pilih freelancer terbaik.</p>
+      <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight page-title text-dark-fix">Kelola Jobs & Tugas</h1>
+      <p class="text-xs md:text-sm text-slate-600 dark:text-slate-400 page-sub text-dark-sub mt-0.5">Pantau tugas yang diposting, tinjau pelamar, dan pilih freelancer terbaik.</p>
     </div>
     
-    <a href="/hire/jobs/create" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 flex-shrink-0">
+    <a href="/hire/jobs/create" class="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 flex-shrink-0">
       <span>➕</span> Buat Tugas Baru
     </a>
   </div>
 
   <!-- Metric Summary -->
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
     <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between metric-card">
       <div>
         <p class="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider text-dark-sub">Total Tugas</p>
-        <p class="text-2xl font-black text-slate-900 dark:text-white text-dark-fix">{jobs.length}</p>
+        <p class="text-xl md:text-2xl font-black text-slate-900 dark:text-white text-dark-fix">{jobs.length}</p>
       </div>
-      <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg font-bold">📋</div>
+      <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg font-bold flex-shrink-0">📋</div>
     </div>
 
     <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between metric-card">
       <div>
         <p class="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider text-dark-sub">Total Pelamar Masuk</p>
-        <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{totalApplicantsAll}</p>
+        <p class="text-xl md:text-2xl font-black text-emerald-600 dark:text-emerald-400">{totalApplicantsAll}</p>
       </div>
-      <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg font-bold">👥</div>
+      <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg font-bold flex-shrink-0">👥</div>
     </div>
 
     <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between metric-card">
       <div>
         <p class="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider text-dark-sub">Status Postingan</p>
-        <p class="text-2xl font-black text-slate-900 dark:text-white text-dark-fix">Kelola</p>
+        <p class="text-xl md:text-2xl font-black text-slate-900 dark:text-white text-dark-fix">Kelola</p>
       </div>
-      <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg font-bold">⚡</div>
+      <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg font-bold flex-shrink-0">⚡</div>
     </div>
   </div>
 
   <!-- Daftar Job Utama -->
   <div class="space-y-4">
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between px-1">
       <h2 class="font-bold text-sm text-slate-900 dark:text-white text-dark-fix">Daftar Job Terpublikasi</h2>
       <span class="text-xs text-slate-500 dark:text-slate-400 text-dark-sub">{jobs.length} Tugas Ditemukan</span>
     </div>
@@ -347,92 +347,94 @@
         <p class="text-xs text-slate-500 dark:text-slate-400 text-dark-sub max-w-sm mx-auto">Mulai buat tugas pertama Anda untuk mempekerjakan freelancer terverifikasi.</p>
       </div>
     {:else}
-      {#each jobs as job (job.id)}
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition duration-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-5 job-item-card">
-          
-          <div class="space-y-2 flex-1">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-extrabold text-[11px] rounded-md border border-emerald-500/20">
-                {job.category?.name ?? 'Umum'}
-              </span>
-              <span class="text-[11px] font-mono text-slate-500 dark:text-slate-400 text-dark-sub">ID: #{job.id}</span>
-              {#if job.created_at}
-                <span class="text-[11px] text-slate-500 dark:text-slate-400 text-dark-sub">• {new Date(job.created_at).toLocaleDateString('id-ID')}</span>
+      <div class="space-y-3">
+        {#each jobs as job (job.id)}
+          <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition duration-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 job-item-card">
+            
+            <div class="space-y-2 flex-1 w-full min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-extrabold text-[11px] rounded-md border border-emerald-500/20">
+                  {job.category?.name ?? 'Umum'}
+                </span>
+                <span class="text-[11px] font-mono text-slate-500 dark:text-slate-400 text-dark-sub">ID: #{job.id}</span>
+                {#if job.created_at}
+                  <span class="text-[11px] text-slate-500 dark:text-slate-400 text-dark-sub">• {new Date(job.created_at).toLocaleDateString('id-ID')}</span>
+                {/if}
+
+                <!-- Indikator Status Job -->
+                <span class="px-2 py-0.5 font-black text-[10px] rounded {statusInfo(job.status).badge}">
+                  {statusInfo(job.status).label}
+                </span>
+              </div>
+
+              <h3 class="font-black text-base text-slate-900 dark:text-white job-title text-dark-fix leading-snug break-words">{job.title}</h3>
+              
+              <div class="flex items-center gap-4 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <span>Budget Escrow: {formatRupiah(job.budget)}</span>
+              </div>
+
+              <!-- Kotak Alasan Penolakan oleh Admin -->
+              {#if job.status === 'rejected' && job.rejection_reason}
+                <div class="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300 space-y-1.5">
+                  <p class="font-bold flex items-center gap-1.5">
+                    <span>⚠️</span> Alasan Tugas Ditolak oleh Admin:
+                  </p>
+                  <p class="italic text-red-600 dark:text-red-400 leading-relaxed break-words">
+                    "{job.rejection_reason}"
+                  </p>
+                  <div class="pt-1 flex items-center gap-3">
+                    <button onclick={() => openEditModal(job)} class="font-bold underline hover:text-red-800 dark:hover:text-red-200 text-left">
+                      Perbaiki & Ajukan Ulang &rarr;
+                    </button>
+                  </div>
+                </div>
+              {/if}
+            </div>
+
+            <!-- Tombol Aksi (Detail, Pelamar, Edit, Hapus) -->
+            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end pt-3 lg:pt-0 border-t lg:border-0 border-slate-100 dark:border-slate-800 divider-border">
+              <!-- Tombol Lihat Detail -->
+              <button 
+                onclick={() => viewDetail(job)}
+                class="px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
+                title="Lihat Detail Tugas"
+              >
+                <span>👁</span> Detail
+              </button>
+
+              {#if !['rejected', 'cancelled', 'completed'].includes(job.status)}
+                <button 
+                  onclick={() => viewApplicants(job)}
+                  class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-sm btn-applicants"
+                >
+                  <span>👥</span>
+                  <span>{job.applicants_count ?? 0} Pelamar</span>
+                </button>
               {/if}
 
-              <!-- Indikator Status Job -->
-              <span class="px-2 py-0.5 font-black text-[10px] rounded {statusInfo(job.status).badge}">
-                {statusInfo(job.status).label}
-              </span>
+              {#if !['in_progress', 'reviewing', 'completed'].includes(job.status)}
+                <!-- Tombol Edit -->
+                <button 
+                  onclick={() => openEditModal(job)}
+                  class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
+                  title="Edit Tugas"
+                >
+                  <span>✏️</span> Edit
+                </button>
+
+                <!-- Tombol Hapus -->
+                <button 
+                  onclick={() => deleteJob(job.id)}
+                  class="px-3.5 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
+                  title="Hapus Tugas"
+                >
+                  <span>🗑️</span> Hapus
+                </button>
+              {/if}
             </div>
-
-            <h3 class="font-black text-base text-slate-900 dark:text-white job-title text-dark-fix leading-snug">{job.title}</h3>
-            
-            <div class="flex items-center gap-4 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              <span>Budget Escrow: {formatRupiah(job.budget)}</span>
-            </div>
-
-            <!-- Kotak Alasan Penolakan oleh Admin -->
-            {#if job.status === 'rejected' && job.rejection_reason}
-              <div class="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300 space-y-1.5">
-                <p class="font-bold flex items-center gap-1.5">
-                  <span>⚠️</span> Alasan Tugas Ditolak oleh Admin:
-                </p>
-                <p class="italic text-red-600 dark:text-red-400 leading-relaxed">
-                  "{job.rejection_reason}"
-                </p>
-                <div class="pt-1 flex items-center gap-3">
-                  <button onclick={() => openEditModal(job)} class="font-bold underline hover:text-red-800 dark:hover:text-red-200 text-left">
-                    Perbaiki & Ajukan Ulang &rarr;
-                  </button>
-                </div>
-              </div>
-            {/if}
           </div>
-
-          <!-- Tombol Aksi (Detail, Pelamar, Edit, Hapus) -->
-          <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-between md:justify-end pt-3 md:pt-0 border-t md:border-0 border-slate-100 dark:border-slate-800 divider-border">
-            <!-- Tombol Lihat Detail -->
-            <button 
-              onclick={() => viewDetail(job)}
-              class="px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
-              title="Lihat Detail Tugas"
-            >
-              <span>👁</span> Detail
-            </button>
-
-            {#if !['rejected', 'cancelled', 'completed'].includes(job.status)}
-              <button 
-                onclick={() => viewApplicants(job)}
-                class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-sm btn-applicants"
-              >
-                <span>👥</span>
-                <span>{job.applicants_count ?? 0} Pelamar</span>
-              </button>
-            {/if}
-
-            {#if !['in_progress', 'reviewing', 'completed'].includes(job.status)}
-              <!-- Tombol Edit -->
-              <button 
-                onclick={() => openEditModal(job)}
-                class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
-                title="Edit Tugas"
-              >
-                <span>✏️</span> Edit
-              </button>
-
-              <!-- Tombol Hapus -->
-              <button 
-                onclick={() => deleteJob(job.id)}
-                class="px-3.5 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
-                title="Hapus Tugas"
-              >
-                <span>🗑️</span> Hapus
-              </button>
-            {/if}
-          </div>
-        </div>
-      {/each}
+        {/each}
+      </div>
     {/if}
   </div>
 </div>
@@ -440,26 +442,26 @@
 <!-- Modal Detail Job -->
 {#if isDetailModalOpen && detailJob}
   <div class="modal-backdrop" onclick={() => isDetailModalOpen = false}>
-    <div class="modal-card max-w-lg" onclick={(e) => e.stopPropagation()}>
+    <div class="modal-card max-w-lg w-[95%] sm:w-full" onclick={(e) => e.stopPropagation()}>
       <div class="modal-header border-b border-slate-200 dark:border-slate-800 pb-4 flex justify-between items-start gap-4 divider-border">
-        <div class="flex items-start gap-2">
+        <div class="flex items-start gap-2 flex-wrap">
           <h2 class="font-black text-base text-slate-900 dark:text-white text-dark-fix">Detail Tugas</h2>
           <span class="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-extrabold text-[11px] rounded-md border border-emerald-500/20">
             {detailJob.category?.name ?? 'Umum'}
           </span>
         </div>
-        <button class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center transition" onclick={() => isDetailModalOpen = false}>✕</button>
+        <button class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center transition flex-shrink-0" onclick={() => isDetailModalOpen = false}>✕</button>
       </div>
 
       <div class="space-y-4 pt-4 text-xs">
         <div class="space-y-1">
           <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-dark-sub">Judul</p>
-          <p class="font-black text-sm text-slate-900 dark:text-white text-dark-fix leading-snug">{detailJob.title}</p>
+          <p class="font-black text-sm text-slate-900 dark:text-white text-dark-fix leading-snug break-words">{detailJob.title}</p>
         </div>
 
         <div class="space-y-1">
           <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-dark-sub">Deskripsi</p>
-          <p class="text-slate-600 dark:text-slate-300 text-dark-sub leading-relaxed whitespace-pre-line">{detailJob.description || '-'}</p>
+          <p class="text-slate-600 dark:text-slate-300 text-dark-sub leading-relaxed whitespace-pre-line break-words">{detailJob.description || '-'}</p>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -469,7 +471,7 @@
           </div>
           <div class="space-y-1">
             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-dark-sub">Lokasi</p>
-            <p class="font-bold text-slate-700 dark:text-slate-200">{detailJob.location || '-'}</p>
+            <p class="font-bold text-slate-700 dark:text-slate-200 break-words">{detailJob.location || '-'}</p>
           </div>
           <div class="space-y-1">
             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-dark-sub">Deadline</p>
@@ -494,7 +496,7 @@
         {#if detailJob.status === 'rejected' && detailJob.rejection_reason}
           <div class="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-xs text-red-700 dark:text-red-300">
             <p class="font-bold mb-1">⚠️ Alasan Penolakan:</p>
-            <p class="italic leading-relaxed">"{detailJob.rejection_reason}"</p>
+            <p class="italic leading-relaxed break-words">"{detailJob.rejection_reason}"</p>
           </div>
         {/if}
 
@@ -502,7 +504,7 @@
           <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 space-y-2.5 detail-box">
             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-dark-sub">📎 Bukti Pekerjaan</p>
             {#if detailJob.proof_url}
-              <a href={detailJob.proof_url} target="_blank" rel="noreferrer" class="inline-block px-3 py-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs rounded-lg transition">
+              <a href={detailJob.proof_url} target="_blank" rel="noreferrer" class="inline-block px-3 py-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs rounded-lg transition break-all">
                 🔗 Lihat Bukti (Link)
               </a>
             {/if}
@@ -515,26 +517,26 @@
           </div>
         {/if}
 
-        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800 flex-wrap">
+        <div class="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <button onclick={() => isDetailModalOpen = false} class="w-full sm:w-auto px-4 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition">
+            Tutup
+          </button>
           {#if detailJob.status === 'reviewing'}
-            <button onclick={() => openRevisionModal()} disabled={isActionProcessing} class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition disabled:opacity-50">
+            <button onclick={() => openRevisionModal()} disabled={isActionProcessing} class="w-full sm:w-auto px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition disabled:opacity-50">
               🔁 Minta Revisi
             </button>
-            <button onclick={() => completeJob(detailJob)} disabled={isActionProcessing} class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition disabled:opacity-50">
+            <button onclick={() => completeJob(detailJob)} disabled={isActionProcessing} class="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition disabled:opacity-50">
               ✅ Selesaikan & Bayar
             </button>
           {:else if detailJob.status === 'completed' && detailJob.invoice}
-            <button onclick={() => downloadInvoice(detailJob)} class="px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl transition">
+            <button onclick={() => downloadInvoice(detailJob)} class="w-full sm:w-auto px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl transition">
               📥 Unduh Invoice PDF
             </button>
           {:else if !['in_progress', 'reviewing', 'completed'].includes(detailJob.status)}
-            <button onclick={() => { isDetailModalOpen = false; openEditModal(detailJob); }} class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition">
+            <button onclick={() => { isDetailModalOpen = false; openEditModal(detailJob); }} class="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition">
               ✏️ Edit Tugas
             </button>
           {/if}
-          <button onclick={() => isDetailModalOpen = false} class="px-4 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition">
-            Tutup
-          </button>
         </div>
       </div>
     </div>
@@ -544,13 +546,13 @@
 <!-- Modal Daftar Pelamar -->
 {#if isApplicantsModalOpen}
   <div class="modal-backdrop" onclick={() => isApplicantsModalOpen = false}>
-    <div class="modal-card" onclick={(e) => e.stopPropagation()}>
-      <div class="modal-header border-b border-slate-200 dark:border-slate-800 pb-4 flex justify-between items-start divider-border">
-        <div>
+    <div class="modal-card max-w-lg w-[95%] sm:w-full" onclick={(e) => e.stopPropagation()}>
+      <div class="modal-header border-b border-slate-200 dark:border-slate-800 pb-4 flex justify-between items-start divider-border gap-4">
+        <div class="min-w-0">
           <h2 class="font-black text-base text-slate-900 dark:text-white text-dark-fix">Daftar Pelamar Tugas</h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-md line-clamp-1 text-dark-sub">{applicantsModal?.jobTitle}</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate text-dark-sub">{applicantsModal?.jobTitle}</p>
         </div>
-        <button class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center transition" onclick={() => isApplicantsModalOpen = false}>✕</button>
+        <button class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center transition flex-shrink-0" onclick={() => isApplicantsModalOpen = false}>✕</button>
       </div>
 
       <div class="space-y-3 my-4 max-h-[60vh] overflow-y-auto pr-1">
@@ -567,14 +569,14 @@
           </div>
         {:else}
           {#each applicantsModal.applicants as applicant}
-            <div class="p-3.5 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-3 applicant-row">
-              <div class="flex items-center gap-3">
+            <div class="p-3.5 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 applicant-row">
+              <div class="flex items-center gap-3 min-w-0 w-full sm:w-auto">
                 <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white font-bold text-sm flex items-center justify-center flex-shrink-0 shadow-sm">
                   {applicant.name?.charAt(0) ?? '?'}
                 </div>
-                <div>
-                  <h4 class="font-bold text-xs text-slate-900 dark:text-white text-dark-fix">{applicant.name ?? '-'}</h4>
-                  <div class="flex items-center gap-2 text-[10px] font-semibold mt-0.5">
+                <div class="min-w-0 flex-1">
+                  <h4 class="font-bold text-xs text-slate-900 dark:text-white text-dark-fix truncate">{applicant.name ?? '-'}</h4>
+                  <div class="flex items-center gap-2 text-[10px] font-semibold mt-0.5 flex-wrap">
                     <span class="text-amber-500">⭐ {applicant.rating ?? '0.0'}</span>
                     <span class="text-slate-400 dark:text-slate-500 text-dark-sub">•</span>
                     <span class="text-purple-600 dark:text-purple-400 font-bold">{applicant.level ?? 'Worker'}</span>
@@ -591,7 +593,7 @@
               <button 
                 onclick={() => openFreelancerProfile(applicant)}
                 disabled={applicant.status !== 'pending'}
-                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                class="w-full sm:w-auto px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {applicant.status === 'pending' ? 'Lihat Profil' : 'Diproses'}
               </button>
@@ -606,10 +608,10 @@
 <!-- Modal Detail Profil & Aksi (Terima/Tolak) -->
 {#if isProfileModalOpen && selectedApplicant}
   <div class="modal-backdrop z-50" onclick={() => isProfileModalOpen = false}>
-    <div class="modal-card max-w-md" onclick={(e) => e.stopPropagation()}>
+    <div class="modal-card max-w-md w-[95%] sm:w-full" onclick={(e) => e.stopPropagation()}>
       <div class="modal-header border-b border-slate-200 dark:border-slate-800 pb-4 flex justify-between items-center divider-border">
         <h2 class="font-black text-base text-slate-900 dark:text-white text-dark-fix">Pratinjau Profil Freelancer</h2>
-        <button class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center transition" onclick={() => isProfileModalOpen = false}>✕</button>
+        <button class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center transition flex-shrink-0" onclick={() => isProfileModalOpen = false}>✕</button>
       </div>
 
       <div class="space-y-4 pt-4 text-xs">
@@ -617,12 +619,12 @@
           <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white font-black text-lg flex items-center justify-center shadow-md flex-shrink-0">
             {selectedApplicant.name?.charAt(0) ?? '?'}
           </div>
-          <div class="space-y-1">
-            <h3 class="font-black text-sm text-slate-900 dark:text-white text-dark-fix">{selectedApplicant.name ?? '-'}</h3>
+          <div class="space-y-1 min-w-0 flex-1">
+            <h3 class="font-black text-sm text-slate-900 dark:text-white text-dark-fix truncate">{selectedApplicant.name ?? '-'}</h3>
             <span class="inline-block px-2.5 py-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 font-black rounded-md text-[10px] border border-purple-500/20">
               🏆 {selectedApplicant.level ?? 'Worker'}
             </span>
-            <p class="text-slate-500 dark:text-slate-400 text-dark-sub text-[11px]">
+            <p class="text-slate-500 dark:text-slate-400 text-dark-sub text-[11px] truncate">
               ⭐ <strong class="text-slate-900 dark:text-white text-dark-fix">{selectedApplicant.rating ?? '0.0'}</strong> ({selectedApplicant.completed_tasks ?? 0} Pekerjaan Selesai)
             </p>
           </div>
@@ -631,14 +633,14 @@
         <div class="grid grid-cols-1 gap-2.5 p-3.5 bg-white dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-slate-800 contact-box">
           <div class="flex items-center gap-2.5 text-xs">
             <span class="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">✉️</span>
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Email</p>
               <p class="font-bold text-slate-800 dark:text-slate-100 truncate">{selectedApplicant.email || 'Belum diisi'}</p>
             </div>
           </div>
           <div class="flex items-center gap-2.5 text-xs">
             <span class="w-7 h-7 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center flex-shrink-0">📞</span>
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">No. Handphone</p>
               <p class="font-bold text-slate-800 dark:text-slate-100 truncate">{selectedApplicant.phone || 'Belum diisi'}</p>
             </div>
@@ -648,14 +650,14 @@
             <a 
               href={waLink(selectedApplicant.phone, `Halo ${selectedApplicant.name}, kami melihat lamaran Anda di Kerjain untuk lowongan kami.`)}
               target="_blank" rel="noreferrer"
-              class="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#25d366] hover:bg-[#1eb858] text-white font-bold rounded-xl transition"
+              class="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#25d366] hover:bg-[#1eb858] text-white font-bold rounded-xl transition w-full"
             >
               💬 Hubungi via WhatsApp
             </a>
           {/if}
         </div>
 
-        <div class="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800 divider-border mt-4">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800 divider-border mt-4">
           <button 
             onclick={() => rejectApplicant(selectedApplicant)} 
             disabled={processingApplicantId === selectedApplicant.id}
@@ -664,7 +666,7 @@
             Tolak Pelamar
           </button>
           
-          <div class="flex w-full sm:w-auto gap-2.5">
+          <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-2.5">
             <button 
               onclick={() => isProfileModalOpen = false} 
               class="w-full sm:w-auto px-4 py-2.5 bg-slate-200 dark:bg-slate-800 font-bold rounded-xl text-slate-700 dark:text-slate-300 transition"
@@ -688,10 +690,10 @@
 <!-- Modal Edit Job -->
 {#if isEditModalOpen}
   <div class="modal-backdrop" onclick={() => isEditModalOpen = false}>
-    <div class="modal-card max-w-lg" onclick={(e) => e.stopPropagation()}>
+    <div class="modal-card max-w-lg w-[95%] sm:w-full" onclick={(e) => e.stopPropagation()}>
       <div class="modal-header border-b border-slate-200 dark:border-slate-800 pb-4 flex justify-between items-center divider-border">
         <h2 class="font-black text-base text-slate-900 dark:text-white text-dark-fix">Edit & Perbarui Tugas</h2>
-        <button class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center transition" onclick={() => isEditModalOpen = false}>✕</button>
+        <button class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center transition flex-shrink-0" onclick={() => isEditModalOpen = false}>✕</button>
       </div>
 
       <form onsubmit={submitEditJob} class="space-y-4 pt-4 text-xs">
@@ -721,7 +723,7 @@
           </select>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="space-y-1.5">
             <label for="edit-budget" class="font-bold text-slate-700 dark:text-slate-300">Budget / Fee (Rp)</label>
             <input 
@@ -767,18 +769,18 @@
           />
         </div>
 
-        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+        <div class="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
           <button 
             type="button" 
             onclick={() => isEditModalOpen = false} 
-            class="px-4 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl"
+            class="w-full sm:w-auto px-4 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl"
           >
             Batal
           </button>
           <button 
             type="submit" 
             disabled={isSubmittingEdit}
-            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 disabled:opacity-50"
+            class="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 disabled:opacity-50"
           >
             {isSubmittingEdit ? 'Menyimpan...' : 'Simpan Perubahan'}
           </button>
@@ -791,10 +793,10 @@
 <!-- Modal Minta Revisi -->
 {#if isRevisionModalOpen && detailJob}
   <div class="modal-backdrop z-50" onclick={() => isRevisionModalOpen = false}>
-    <div class="modal-card max-w-md" onclick={(e) => e.stopPropagation()}>
+    <div class="modal-card max-w-md w-[95%] sm:w-full" onclick={(e) => e.stopPropagation()}>
       <div class="modal-header border-b border-slate-200 dark:border-slate-800 pb-4 flex justify-between items-center divider-border">
         <h2 class="font-black text-base text-slate-900 dark:text-white text-dark-fix">🔁 Minta Revisi Pekerjaan</h2>
-        <button class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center transition" onclick={() => isRevisionModalOpen = false}>✕</button>
+        <button class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center transition flex-shrink-0" onclick={() => isRevisionModalOpen = false}>✕</button>
       </div>
 
       <form onsubmit={submitRevision} class="space-y-4 pt-4 text-xs">
@@ -810,18 +812,18 @@
           <p class="text-[11px] text-slate-500 dark:text-slate-400 text-dark-sub">Pekerjaan akan kembali ke tahap "Dalam Pengerjaan" agar freelancer dapat memperbaiki dan mengirim ulang bukti.</p>
         </div>
 
-        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+        <div class="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
           <button 
             type="button" 
             onclick={() => isRevisionModalOpen = false} 
-            class="px-4 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl"
+            class="w-full sm:w-auto px-4 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl"
           >
             Batal
           </button>
           <button 
             type="submit" 
             disabled={isActionProcessing}
-            class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-lg shadow-amber-500/20 disabled:opacity-50"
+            class="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-lg shadow-amber-500/20 disabled:opacity-50"
           >
             {isActionProcessing ? 'Mengirim...' : 'Kirim Permintaan Revisi'}
           </button>
@@ -848,10 +850,16 @@
     border-radius: 20px;
     width: 100%;
     max-width: 520px;
-    padding: 24px;
+    padding: 20px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     max-height: 90vh;
     overflow-y: auto;
+  }
+
+  @media (min-width: 640px) {
+    .modal-card {
+      padding: 24px;
+    }
   }
 
   :global(body.dark-theme) .modal-card {

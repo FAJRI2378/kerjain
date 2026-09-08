@@ -64,6 +64,8 @@ Route::middleware(['auth:sanctum', 'maintenance'])->group(function () {
         Route::post('/verification', [VerificationController::class, 'store']);
         Route::get('/wallet', [FreelancerWalletController::class, 'index']);
         Route::post('/wallet/withdraw', [FreelancerWalletController::class, 'withdraw']);
+        Route::get('/profile', [Freelancer\ProfileController::class, 'show']);
+        Route::post('/profile', [Freelancer\ProfileController::class, 'update']);
     });
 
     // Hirer

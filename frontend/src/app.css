@@ -1,1 +1,74 @@
 @import "tailwindcss";
+
+/* src/app.css */
+:root {
+  --bg-body: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --bg-surface: #ffffff;
+  --border-color: #e2e8f0;
+  --btn-primary-bg: #15803d;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: #166534;
+  --btn-action-bg: #0d233a;
+  --btn-action-text: #ffffff;
+  --btn-action-hover: #1e293b;
+  --hero-bg: #0d233a;
+  --hero-text: #ffffff;
+  --hero-subtitle: #94a3b8;
+  --hero-divider: rgba(255, 255, 255, 0.15);
+  --search-icon: #8b96a5;
+  --tab-bg: #ffffff;
+  --tab-text: #475569;
+  --tab-active-bg: #0d233a;
+  --tab-active-text: #ffffff;
+  --badge-cat-bg: #dcfce7;
+  --badge-cat-text: #166534;
+  --tag-bg: #f1f5f9;
+  --tag-text: #64748b;
+  --footer-bg: #0d233a;
+  --footer-border: #1e293b;
+  --brand-text: #0d233a;
+}
+
+body.dark-theme {
+  --bg-body: #0f172a;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --bg-surface: #1e293b;
+  --border-color: #334155;
+  --btn-primary-bg: #10b981;
+  --btn-primary-text: #0f172a;
+  --btn-primary-hover: #059669;
+  --btn-action-bg: #d9f99d;
+  --btn-action-text: #0f172a;
+  --btn-action-hover: #bef264;
+  --hero-bg: #09131f;
+  --hero-text: #ffffff;
+  --hero-subtitle: #94a3b8;
+  --hero-divider: rgba(255, 255, 255, 0.1);
+  --search-icon: #94a3b8;
+  --tab-bg: #1e293b;
+  --tab-text: #cbd5e1;
+  --tab-active-bg: #d9f99d;
+  --tab-active-text: #0f172a;
+  --badge-cat-bg: rgba(34, 197, 94, 0.2);
+  --badge-cat-text: #4ade80;
+  --tag-bg: #334155;
+  --tag-text: #e2e8f0;
+  --footer-bg: #09131f;
+  --footer-border: #1e293b;
+  --brand-text: #f8fafc;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}

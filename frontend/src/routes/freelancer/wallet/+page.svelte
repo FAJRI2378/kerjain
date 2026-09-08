@@ -18,9 +18,9 @@
 
   // State Pagination
   let currentPage = $state(1);
-  let itemsPerPage = $state(3); // Jumlah item per halaman (bisa diubah sesuai kebutuhan)
+  let itemsPerPage = $state(3);
 
-  // Data Dummy sebagai fallback saat backend tidak aktif
+  // Data Dummy
   let dummyTransactions = [
     { id: 1, type: 'in', title: 'Pembayaran Tugas: Desain Logo Kopi', amount: 300000, date: '2026-09-04', month: '09', year: '2026' },
     { id: 2, type: 'out', title: 'Penarikan Dana ke BCA (***8821)', amount: 1500000, date: '2026-09-01', month: '09', year: '2026' },
@@ -37,7 +37,6 @@
       saldo = res.data.balance;
       transactions = res.data.transactions ?? [];
     } catch (err) {
-      // Data dummy untuk presentasi jika backend tidak aktif
       saldo = 4500000;
       transactions = dummyTransactions;
     }
@@ -45,7 +44,6 @@
 
   onMount(loadWallet);
 
-  // State Pusat Notifikasi (Activity Log)
   let notifications = $state([
     { id: 1, icon: '💰', title: 'Dana Masuk!', desc: 'Pembayaran Rp 300.000 untuk tugas Desain Logo telah masuk ke dompet.', time: 'Kemarin, 14:20', unread: true },
     { id: 2, icon: '⭐', title: 'Ulasan Baru!', desc: 'Kopi Kenangan Senja memberikan rating 5 bintang pada profil Anda.', time: '2 hari lalu', unread: false },
@@ -56,7 +54,6 @@
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
   }
 
-  // 1. Filter reaktif untuk Riwayat Transaksi berdasarkan Bulan, Tahun, dan Search
   let filteredTransactions = $derived(
     transactions.filter(tx => {
       const matchMonth = selectedMonth === 'all' || tx.month === selectedMonth;
@@ -66,30 +63,17 @@
     })
   );
 
-  // Reset halaman ke 1 setiap kali filter atau pencarian berubah
   $effect(() => {
-    // Membaca state filter agar reaktif
     selectedMonth;
     selectedYear;
     txSearchQuery;
     currentPage = 1;
   });
 
-  // 2. Hitung Rekap Total dari seluruh hasil filter (sebelum dipotong pagination)
-  let totalPemasukan = $derived(
-    filteredTransactions.filter(tx => tx.type === 'in').reduce((sum, tx) => sum + tx.amount, 0)
-  );
-
-  let totalPenarikan = $derived(
-    filteredTransactions.filter(tx => tx.type === 'out').reduce((sum, tx) => sum + tx.amount, 0)
-  );
-
-  // 3. Logika Pagination untuk memotong data sesuai halaman aktif
+  let totalPemasukan = $derived(filteredTransactions.filter(tx => tx.type === 'in').reduce((sum, tx) => sum + tx.amount, 0));
+  let totalPenarikan = $derived(filteredTransactions.filter(tx => tx.type === 'out').reduce((sum, tx) => sum + tx.amount, 0));
   let totalPages = $derived(Math.ceil(filteredTransactions.length / itemsPerPage) || 1);
-
-  let paginatedTransactions = $derived(
-    filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-  );
+  let paginatedTransactions = $derived(filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage));
 
   function goToPage(page) {
     if (page >= 1 && page <= totalPages) {
@@ -97,7 +81,6 @@
     }
   }
 
-  // Penarikan Dana (Withdrawal) terhubung ke API
   async function handleWithdraw(e) {
     e.preventDefault();
     const amountNum = Number(withdrawAmount);
@@ -117,11 +100,7 @@
 
     isWithdrawing = true;
     try {
-      const res = await api.post('/api/freelancer/wallet/withdraw', {
-        amount: amountNum,
-        bank_name: selectedBank,
-        account_number: accountNumber
-      });
+      const res = await api.post('/api/freelancer/wallet/withdraw', { amount: amountNum, bank_name: selectedBank, account_number: accountNumber });
       saldo = res.data.balance;
       transactions = res.data.transactions ?? [];
       withdrawAmount = '';
@@ -149,7 +128,6 @@
   </div>
 
   <div class="wallet-grid">
-    <!-- Kolom Kiri: Dompet Digital, Penarikan & Rekap Transaksi -->
     <div class="wallet-left">
       <div class="card balance-card gradient-bg">
         <p class="balance-label">Total Saldo Tersedia</p>
@@ -186,13 +164,11 @@
         </form>
       </div>
 
-      <!-- Riwayat Transaksi Keuangan dengan Rekap & Pagination -->
       <div class="card transaction-card">
         <div class="tx-header-wrap">
-          <h3 class="card-section-title" style="margin: 0;">📜 Riwayat & Rekap Keuangan</h3>
+          <h3 class="card-section-title" style="margin: 0;">📜 Riwayat & Rekap</h3>
         </div>
 
-        <!-- Filter & Rekap Panel -->
         <div class="rekap-filter-panel">
           <div class="filter-controls-row">
             <select bind:value={selectedMonth} class="form-input select-filter">
@@ -217,7 +193,6 @@
             </select>
           </div>
 
-          <!-- Kotak Ringkasan Rekap -->
           <div class="rekap-summary-grid">
             <div class="rekap-box box-in">
               <span class="rekap-label">Total Pemasukan</span>
@@ -251,49 +226,28 @@
           {/each}
         </div>
 
-        <!-- Kontrol Pagination -->
         {#if filteredTransactions.length > 0}
           <div class="pagination-container">
             <span class="pagination-info">
               Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredTransactions.length)} dari {filteredTransactions.length} transaksi
             </span>
             <div class="pagination-buttons">
-              <button 
-                class="btn-page" 
-                onclick={() => goToPage(currentPage - 1)} 
-                disabled={currentPage === 1}
-              >
-                ‹ Prev
-              </button>
-              
+              <button class="btn-page" onclick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>‹ Prev</button>
               {#each Array(totalPages) as _, i}
-                <button 
-                  class="btn-page {currentPage === i + 1 ? 'active-page' : ''}" 
-                  onclick={() => goToPage(i + 1)}
-                >
-                  {i + 1}
-                </button>
+                <button class="btn-page {currentPage === i + 1 ? 'active-page' : ''}" onclick={() => goToPage(i + 1)}>{i + 1}</button>
               {/each}
-
-              <button 
-                class="btn-page" 
-                onclick={() => goToPage(currentPage + 1)} 
-                disabled={currentPage === totalPages}
-              >
-                Next ›
-              </button>
+              <button class="btn-page" onclick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>Next ›</button>
             </div>
           </div>
         {/if}
       </div>
     </div>
 
-    <!-- Kolom Kanan: Pusat Notifikasi (Activity Log) -->
     <div class="wallet-right">
       <div class="card notification-panel">
         <div class="notif-header">
-          <h3 class="card-section-title">🔔 Log Aktivitas & Notifikasi</h3>
-          <button class="btn-mark-read" onclick={markAllRead}>Tandai Semua Dibaca</button>
+          <h3 class="card-section-title">🔔 Log Aktivitas</h3>
+          <button class="btn-mark-read" onclick={markAllRead}>Tandai Dibaca</button>
         </div>
 
         <div class="notif-list">
@@ -316,30 +270,83 @@
 </div>
 
 <style>
+  /* Base & Layout */
   .wallet-page {
-    padding: 32px 24px;
+    padding: 16px; /* Reduced for mobile */
     max-width: 1200px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 16px; /* Reduced for mobile */
   }
 
+  .wallet-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr); /* Single column on mobile & tablet */
+    gap: 16px;
+  }
+
+  .wallet-left, .wallet-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  /* Breakpoint: Desktop */
+  @media (min-width: 992px) {
+    .wallet-page {
+      padding: 32px 24px;
+      gap: 28px;
+    }
+    .wallet-grid {
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      gap: 24px;
+    }
+    .wallet-left, .wallet-right {
+      gap: 24px;
+    }
+  }
+
+  /* Cards & Headers */
   .page-header {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 16px;
-    padding: 28px 32px;
+    padding: 20px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     transition: background-color 0.3s ease, border-color 0.3s ease;
   }
 
+  .card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 16px; /* Reduced padding for mobile */
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+
+  /* Breakpoint: Tablet & Up */
+  @media (min-width: 768px) {
+    .page-header {
+      padding: 28px 32px;
+    }
+    .card {
+      padding: 24px;
+    }
+  }
+
   .page-title {
-    font-size: 24px;
+    font-size: 20px; /* Smaller font on mobile */
     font-weight: 800;
     color: #0d233a;
     margin: 0 0 4px;
     letter-spacing: -0.01em;
+  }
+
+  @media (min-width: 768px) {
+    .page-title { font-size: 24px; }
   }
 
   .page-sub {
@@ -348,35 +355,6 @@
     margin: 0;
   }
 
-  .card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 24px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-  }
-
-  .wallet-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-  }
-
-  @media (min-width: 992px) {
-    .wallet-grid {
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-    }
-  }
-
-  .wallet-left, .wallet-right {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    min-width: 0;
-  }
-
-  /* Saldo Card */
   .gradient-bg {
     background: linear-gradient(135deg, #0d233a 0%, #1a365d 100%);
     color: white;
@@ -384,17 +362,11 @@
     min-width: 0;
   }
 
-  .balance-label {
-    font-size: 13px;
-    color: #94a3b8;
-    margin: 0 0 4px;
-  }
-
-  .balance-value {
-    font-size: clamp(24px, 7vw, 32px);
-    font-weight: 800;
-    margin: 0 0 12px;
-    overflow-wrap: anywhere;
+  .balance-label { font-size: 13px; color: #94a3b8; margin: 0 0 4px; }
+  .balance-value { font-size: 28px; font-weight: 800; margin: 0 0 12px; overflow-wrap: anywhere; }
+  
+  @media (min-width: 768px) {
+    .balance-value { font-size: 32px; }
   }
 
   .balance-badge {
@@ -414,6 +386,7 @@
     margin: 0 0 16px;
   }
 
+  /* Forms */
   .withdraw-form {
     display: flex;
     flex-direction: column;
@@ -422,28 +395,16 @@
 
   .form-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr; /* Stack vertically on mobile */
     gap: 12px;
   }
 
-  @media (max-width: 560px) {
-    .form-row {
-      grid-template-columns: 1fr;
-    }
+  @media (min-width: 640px) {
+    .form-row { grid-template-columns: 1fr 1fr; } /* Side-by-side on larger screens */
   }
 
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .form-group label {
-    font-size: 12px;
-    font-weight: 700;
-    color: #334155;
-  }
-
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 12px; font-weight: 700; color: #334155; }
   .form-input {
     padding: 10px 14px;
     border: 1px solid #cbd5e1;
@@ -454,10 +415,7 @@
     color: #0f172a;
     transition: border-color 0.2s, background-color 0.3s ease;
   }
-
-  .form-input:focus {
-    border-color: #15803d;
-  }
+  .form-input:focus { border-color: #15803d; }
 
   .btn-withdraw {
     background: #15803d;
@@ -470,44 +428,43 @@
     cursor: pointer;
     transition: background 0.2s;
   }
+  .btn-withdraw:hover:not(:disabled) { background: #166534; }
+  .btn-withdraw:disabled { opacity: 0.6; cursor: not-allowed; }
 
-  .btn-withdraw:hover:not(:disabled) {
-    background: #166534;
-  }
-
-  .btn-withdraw:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  /* Rekap & Filter Keuangan Styles */
+  /* Rekap & Filter */
   .rekap-filter-panel {
     display: flex;
     flex-direction: column;
     gap: 12px;
     margin-bottom: 16px;
     background: #f8fafc;
-    padding: 16px;
+    padding: 12px; /* Smaller on mobile */
     border-radius: 12px;
     border: 1px solid #f1f5f9;
   }
 
+  @media (min-width: 768px) {
+    .rekap-filter-panel { padding: 16px; }
+  }
+
   .filter-controls-row {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Stack on mobile */
     gap: 8px;
   }
 
-  @media (min-width: 768px) {
-    .filter-controls-row {
-      grid-template-columns: 2fr 1fr 1fr;
-    }
+  @media (min-width: 640px) {
+    .filter-controls-row { grid-template-columns: 1fr 1fr; } /* Two columns on tablet */
   }
 
   .rekap-summary-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr; /* Stack vertically on very small screens */
     gap: 10px;
+  }
+
+  @media (min-width: 480px) {
+    .rekap-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } /* Side-by-side above 480px */
   }
 
   .rekap-box {
@@ -521,26 +478,15 @@
     min-width: 0;
   }
 
-  .rekap-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: #64748b;
-  }
-
-  .rekap-val {
-    font-size: 15px;
-    font-weight: 800;
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
+  .rekap-label { font-size: 11px; font-weight: 700; color: #64748b; }
+  .rekap-val { font-size: 15px; font-weight: 800; min-width: 0; overflow-wrap: anywhere; }
 
   /* Transaksi */
-  .tx-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  .tx-header-wrap {
+    margin-bottom: 16px;
   }
 
+  .tx-list { display: flex; flex-direction: column; gap: 12px; }
   .tx-item {
     display: flex;
     align-items: center;
@@ -549,63 +495,33 @@
     background: #f8fafc;
     border-radius: 10px;
     border: 1px solid #f1f5f9;
+    flex-wrap: wrap; /* Allow wrapping on very small screens */
   }
 
   .tx-icon {
-    width: 36px;
-    height: 36px;
+    width: 36px; height: 36px;
     border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
   }
 
   .tx-in { background: #dcfce7; }
   .tx-out { background: #fee2e2; }
 
-  .tx-info {
-    flex: 1;
-    overflow: hidden;
-  }
-
-  .tx-title {
-    margin: 0 0 2px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #0f172a;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .tx-date {
-    margin: 0;
-    font-size: 11px;
-    color: #64748b;
-  }
-
-  .tx-amount {
-    font-size: 13px;
-    font-weight: 800;
-  }
-
+  .tx-info { flex: 1; overflow: hidden; min-width: 150px; }
+  .tx-title { margin: 0 0 2px; font-size: 13px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tx-date { margin: 0; font-size: 11px; color: #64748b; }
+  .tx-amount { font-size: 13px; font-weight: 800; white-space: nowrap; }
+  
   .text-green { color: #15803d; }
   .text-red { color: #dc2626; }
   .text-slate { color: #475569; }
+  .empty-tx { text-align: center; padding: 24px; color: #64748b; font-size: 13px; }
 
-  .empty-tx {
-    text-align: center;
-    padding: 24px;
-    color: #64748b;
-    font-size: 13px;
-  }
-
-  /* Pagination Styles */
+  /* Pagination */
   .pagination-container {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Stack on mobile */
     align-items: center;
     gap: 12px;
     margin-top: 20px;
@@ -615,20 +531,13 @@
 
   @media (min-width: 640px) {
     .pagination-container {
-      flex-direction: row;
+      flex-direction: row; /* Horizontal on larger screens */
       justify-content: space-between;
     }
   }
 
-  .pagination-info {
-    font-size: 12px;
-    color: #64748b;
-  }
-
-  .pagination-buttons {
-    display: flex;
-    gap: 4px;
-  }
+  .pagination-info { font-size: 12px; color: #64748b; text-align: center; }
+  .pagination-buttons { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
 
   .btn-page {
     background: #ffffff;
@@ -641,152 +550,64 @@
     cursor: pointer;
     transition: all 0.2s;
   }
+  .btn-page:hover:not(:disabled) { background: #f1f5f9; color: #0f172a; }
+  .btn-page.active-page { background: #15803d; color: white; border-color: #15803d; }
+  .btn-page:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .btn-page:hover:not(:disabled) {
-    background: #f1f5f9;
-    color: #0f172a;
-  }
-
-  .btn-page.active-page {
-    background: #15803d;
-    color: white;
-    border-color: #15803d;
-  }
-
-  .btn-page:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  /* Notifikasi / Activity Log */
+  /* Notifikasi */
   .notif-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+    flex-wrap: wrap; /* Prevent overlap on small mobile screens */
+    gap: 8px;
   }
 
   .btn-mark-read {
-    background: none;
-    border: none;
-    font-size: 11px;
-    font-weight: 700;
-    color: #2563eb;
-    cursor: pointer;
+    background: none; border: none; font-size: 11px; font-weight: 700;
+    color: #2563eb; cursor: pointer; padding: 0;
   }
 
-  .notif-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
+  .notif-list { display: flex; flex-direction: column; gap: 12px; }
   .notif-item {
-    display: flex;
-    gap: 12px;
-    padding: 14px;
-    background: #f8fafc;
-    border-radius: 10px;
-    border: 1px solid #f1f5f9;
+    display: flex; gap: 12px; padding: 14px;
+    background: #f8fafc; border-radius: 10px; border: 1px solid #f1f5f9;
   }
-
-  .notif-item.unread {
-    background: #f0fdf4;
-    border-color: #bbf7d0;
-  }
-
-  .notif-icon {
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-
-  .notif-content {
-    flex: 1;
-  }
-
+  .notif-item.unread { background: #f0fdf4; border-color: #bbf7d0; }
+  .notif-icon { font-size: 20px; flex-shrink: 0; }
+  .notif-content { flex: 1; }
+  
   .notif-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 4px; flex-wrap: wrap; gap: 4px;
   }
+  
+  .notif-title { margin: 0; font-size: 13px; font-weight: 800; color: #0f172a; }
+  .notif-time { font-size: 10px; color: #94a3b8; white-space: nowrap; }
+  .notif-desc { margin: 0; font-size: 12px; color: #475569; line-height: 1.4; }
 
-  .notif-title {
-    margin: 0;
-    font-size: 13px;
-    font-weight: 800;
-    color: #0f172a;
-  }
-
-  .notif-time {
-    font-size: 10px;
-    color: #94a3b8;
-  }
-
-  .notif-desc {
-    margin: 0;
-    font-size: 12px;
-    color: #475569;
-    line-height: 1.4;
-  }
-
-  /* ---------------- Dark Mode Support ---------------- */
+  /* Dark Mode Support (Tetap Sama) */
   :global(body.dark-theme .page-header),
-  :global(body.dark-theme .card:not(.gradient-bg)) {
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
-  }
+  :global(body.dark-theme .card:not(.gradient-bg)) { background-color: #1e293b !important; border-color: #334155 !important; }
   :global(body.dark-theme .page-title),
   :global(body.dark-theme .card-section-title),
   :global(body.dark-theme .tx-title),
-  :global(body.dark-theme .notif-title) {
-    color: #ffffff !important;
-  }
+  :global(body.dark-theme .notif-title) { color: #ffffff !important; }
   :global(body.dark-theme .page-sub),
   :global(body.dark-theme .tx-date),
   :global(body.dark-theme .notif-time),
   :global(body.dark-theme .notif-desc),
   :global(body.dark-theme .rekap-label),
-  :global(body.dark-theme .pagination-info) {
-    color: #94a3b8 !important;
-  }
-  :global(body.dark-theme .form-group label) {
-    color: #cbd5e1 !important;
-  }
-  :global(body.dark-theme .form-input) {
-    background-color: #0f172a !important;
-    border-color: #334155 !important;
-    color: #ffffff !important;
-  }
-  :global(body.dark-theme .rekap-filter-panel) {
-    background-color: #0f172a !important;
-    border-color: #334155 !important;
-  }
-  :global(body.dark-theme .rekap-box) {
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
-  }
+  :global(body.dark-theme .pagination-info) { color: #94a3b8 !important; }
+  :global(body.dark-theme .form-group label) { color: #cbd5e1 !important; }
+  :global(body.dark-theme .form-input) { background-color: #0f172a !important; border-color: #334155 !important; color: #ffffff !important; }
+  :global(body.dark-theme .rekap-filter-panel) { background-color: #0f172a !important; border-color: #334155 !important; }
+  :global(body.dark-theme .rekap-box) { background-color: #1e293b !important; border-color: #334155 !important; }
   :global(body.dark-theme .tx-item),
-  :global(body.dark-theme .notif-item) {
-    background-color: #0f172a !important;
-    border-color: #334155 !important;
-  }
-  :global(body.dark-theme .notif-item.unread) {
-    background-color: rgba(21, 128, 61, 0.15) !important;
-    border-color: #15803d !important;
-  }
-  :global(body.dark-theme .btn-page) {
-    background-color: #0f172a !important;
-    border-color: #334155 !important;
-    color: #cbd5e1 !important;
-  }
-  :global(body.dark-theme .btn-page:hover:not(:disabled)) {
-    background-color: #334155 !important;
-    color: #ffffff !important;
-  }
-  :global(body.dark-theme .btn-page.active-page) {
-    background-color: #15803d !important;
-    border-color: #15803d !important;
-    color: #ffffff !important;
-  }
+  :global(body.dark-theme .notif-item) { background-color: #0f172a !important; border-color: #334155 !important; }
+  :global(body.dark-theme .notif-item.unread) { background-color: rgba(21, 128, 61, 0.15) !important; border-color: #15803d !important; }
+  :global(body.dark-theme .btn-page) { background-color: #0f172a !important; border-color: #334155 !important; color: #cbd5e1 !important; }
+  :global(body.dark-theme .btn-page:hover:not(:disabled)) { background-color: #334155 !important; color: #ffffff !important; }
+  :global(body.dark-theme .btn-page.active-page) { background-color: #15803d !important; border-color: #15803d !important; color: #ffffff !important; }
 </style>

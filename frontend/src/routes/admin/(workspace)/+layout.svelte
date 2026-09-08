@@ -55,7 +55,7 @@
   }
 </script>
 
-<div class="admin-layout-wrapper min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row selection:bg-purple-500 selection:text-white">
+<div class="admin-layout-wrapper min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row selection:bg-purple-500 selection:text-white relative">
 
   <!-- Mobile Top Bar -->
   <div class="md:hidden flex items-center justify-between p-4 bg-slate-900/90 border-b border-slate-800 backdrop-blur-xl sticky top-0 z-50 mobile-topbar">
@@ -70,25 +70,43 @@
     </a>
     <button 
       onclick={() => isMobileMenuOpen = !isMobileMenuOpen}
-      class="p-2 bg-slate-800 text-slate-300 rounded-lg text-xs hover:text-white btn-toggle-menu"
+      class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-xs font-bold hover:text-white transition btn-toggle-menu flex items-center gap-1.5"
     >
-      {isMobileMenuOpen ? '✕ Close' : '☰ Menu'}
+      <span>{isMobileMenuOpen ? '✕' : '☰'}</span>
+      <span>{isMobileMenuOpen ? 'Tutup' : 'Menu'}</span>
     </button>
   </div>
 
+  <!-- Overlay Gelap untuk Mobile saat Sidebar Terbuka -->
+  {#if isMobileMenuOpen}
+    <div 
+      class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 md:hidden transition-opacity"
+      onclick={() => isMobileMenuOpen = false}
+    ></div>
+  {/if}
+
   <!-- Sidebar Navigasi -->
-  <aside class={`fixed md:sticky top-16 md:top-0 left-0 h-screen w-64 bg-slate-900/90 border-r border-slate-800/80 backdrop-blur-2xl p-5 flex flex-col overflow-y-auto z-40 transition-transform duration-300 sidebar-panel ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+<aside class={`fixed md:sticky top-0 left-0 h-screen w-72 bg-slate-900/95 md:bg-slate-900/90 border-r border-slate-800/80 backdrop-blur-2xl p-5 flex flex-col justify-between overflow-y-auto z-50 transition-transform duration-300 ease-in-out sidebar-panel shadow-2xl md:shadow-none ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
     
     <div class="space-y-8">
-      <!-- Logo Brand -->
-      <div class="hidden md:flex items-center gap-3 px-2">
-        <div class="w-10 h-10 rounded-xl overflow-hidden bg-purple-600/20 border border-purple-500/30 flex items-center justify-center shadow-lg shadow-purple-500/20 flex-shrink-0">
-          <img src="/images/kerjain.webp" alt="Logo Kerjain" class="w-full h-full object-cover" />
+      <!-- Logo Brand & Tombol Close khusus Mobile di dalam Sidebar -->
+      <div class="flex items-center justify-between px-2">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl overflow-hidden bg-purple-600/20 border border-purple-500/30 flex items-center justify-center shadow-lg shadow-purple-500/20 flex-shrink-0">
+            <img src="/images/kerjain.webp" alt="Logo Kerjain" class="w-full h-full object-cover" />
+          </div>
+          <div>
+            <span class="font-black text-base tracking-tight text-white block leading-none">KERJAIN<span class="text-purple-400">.</span></span>
+            <span class="text-[9px] font-mono font-bold text-purple-400 tracking-wider uppercase">Admin Workspace</span>
+          </div>
         </div>
-        <div>
-          <span class="font-black text-base tracking-tight text-white block leading-none">KERJAIN<span class="text-purple-400">.</span></span>
-          <span class="text-[9px] font-mono font-bold text-purple-400 tracking-wider uppercase">Admin Workspace</span>
-        </div>
+        <!-- Tombol Close di dalam panel sidebar mobile -->
+        <button 
+          onclick={() => isMobileMenuOpen = false}
+          class="md:hidden w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm font-bold transition"
+        >
+          ✕
+        </button>
       </div>
 
       <!-- Navigation Links -->
@@ -125,7 +143,7 @@
       </button>
 
       <!-- Admin Profile Info -->
-      <a href="/admin/profile" class="flex items-center gap-3 px-2 py-1.5 rounded-xl bg-slate-950/60 border border-slate-800/50 admin-user-box hover:border-purple-500/40 transition">
+      <a href="/admin/profile" onclick={() => isMobileMenuOpen = false} class="flex items-center gap-3 px-2 py-1.5 rounded-xl bg-slate-950/60 border border-slate-800/50 admin-user-box hover:border-purple-500/40 transition">
         <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center font-bold text-white text-xs flex-shrink-0">
           {auth.user ? initials(auth.user.name) : '?'}
         </div>
